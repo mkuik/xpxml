@@ -55,8 +55,6 @@ public:
 
     virtual std::string toString() const override;
 
-    virtual std::string toStringOwners() const;
-
     virtual void addListener(DestructorListener *l) override;
 
     void notifyLink();

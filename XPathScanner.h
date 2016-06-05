@@ -35,7 +35,6 @@ public:
 	void addTree(BinaryTree *);
 	void removeFromTrash(BinaryTree *);
 	void setAdapter(SaxParserAdapter *);
-	BinaryTree* getBinaryTree() const;
 	size_t getSize() const;
 	void removeUnusedCases();
 private:

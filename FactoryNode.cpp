@@ -101,21 +101,8 @@ bool FactoryNode::isStoredIndirectly() const {
 	}
 }
 
-bool FactoryNode::isClosedInOutput() const {
-	return outputState == CLOSED_IN_XML;
-}
-
-bool FactoryNode::isOpenInOutput() const {
-	return outputState == OPEN_IN_XML;
-}
-
 bool FactoryNode::isClosedInParser() const {
 	return parserState == CLOSED_IN_XML;
-}
-
-bool FactoryNode::isCollectingDust() const {
-	return isClosedInParser() && outputState != OPEN_IN_XML &&
-		!isStoredIndirectly() && !isConfirmedIndirectly();
 }
 
 bool FactoryNode::hasSubElements() const {
@@ -253,7 +240,6 @@ void FactoryNode::print() const {
 }
 
 void FactoryNode::onDestruct(void * pointer) {
-//    std::printf("set stored false %s\n", toString().c_str());
     setStored(false);
 }
 

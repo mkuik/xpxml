@@ -80,7 +80,7 @@ time_t XMLParser::getMilliCount() const {
 
 void XMLParser::onNewNode(Node *node) {
 //    std::cout << "new node " << node->toString() << " \n";
-    if (node->getID() % 500 == 0) doStatusReport();
+    if (node->getID() % 1000 == 0) doStatusReport();
 }
 
 void XMLParser::doStatusReport() {

@@ -78,19 +78,19 @@ XPathCommandDeconstructor::XPathCommandDeconstructor(param_t begin, param_t end)
 	rightStringRangefound = rightStringRangefound && rightBegin != rightEnd;
 	leftStringRangefound = leftStringRangefound && leftBegin != leftEnd;
 
-	std::printf("%s %i\n", name.data(), type);
-	if (hasLeft()) {
-		std::printf(" 0  ");
-		for (param_t it = leftBegin; it != leftEnd; ++it)
-			std::printf("%s", it->data());
-		std::printf("\n");
-	}
-	if (hasRight()) {
-		std::printf(" 1  ");
-		for (param_t it = rightBegin; it != rightEnd; ++it)
-			std::printf("%s", it->data());
-		std::printf("\n");
-	}
+//	std::printf("%s %i\n", name.data(), type);
+//	if (hasLeft()) {
+//		std::printf(" 0  ");
+//		for (param_t it = leftBegin; it != leftEnd; ++it)
+//			std::printf("%s", it->data());
+//		std::printf("\n");
+//	}
+//	if (hasRight()) {
+//		std::printf(" 1  ");
+//		for (param_t it = rightBegin; it != rightEnd; ++it)
+//			std::printf("%s", it->data());
+//		std::printf("\n");
+//	}
 }
 
 const std::string&XPathCommandDeconstructor::getName() const {

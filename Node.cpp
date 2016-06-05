@@ -83,12 +83,6 @@ void Node::addListener(DestructorListener *l) {
     Adapter::addListener(l);
 }
 
-std::string Node::toStringOwners() const {
-    char* buf = new char[20];
-    std::sprintf(buf, "#link:%u", link);
-    return buf;
-}
-
 unsigned short Node::getLink() const {
     return link;
 }

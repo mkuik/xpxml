@@ -28,9 +28,8 @@ public:
 	void cleanup();
 	size_t size() const override;
 private:
+	virtual void onNewComment(Node *node) override;
 	void onNewXPathMatch(Node *) override;
-	void onNewBinaryTree(BinaryTree*) override;
-	void onRemoveBinaryTree(BinaryTree*) override;
 	void onNewNode(Node *) override;
 	void onNewElement(Node *) override;
 	void onEndOfElement(Node *) override;
@@ -38,12 +37,7 @@ private:
     void stateChanged(Node *) override;
     void factoryDestructor(Node *) override;
     void removeFromTrash(FactoryNode*) override;
-    void addToTrash(FactoryNode*) override;
-
 	double getEfficiency() const override;
-	void printMemoryInfoColum() const;
-public:
-    virtual void onNewComment(Node *node) override;
 };
 
 #endif /* XPATHTOXML_H_ */

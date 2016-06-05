@@ -43,10 +43,7 @@ public:
     bool isConfirmedFromParent() const;
     bool isStored() const;
     bool isStoredIndirectly() const;
-    bool isClosedInOutput() const;
-    bool isOpenInOutput() const;
     bool isClosedInParser() const;
-    bool isCollectingDust() const;
     bool hasSubElements() const;
     virtual FactoryNode * getParent() const override;
     void flushXML(std::ostream&, const id_type&);

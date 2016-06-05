@@ -73,8 +73,8 @@ XPathScanner::XPathScanner(const std::string& xpath_string) : Name("xpath scanne
 
 	blueprint = new BinaryTree(0, xpath.begin(), xpath.end());
 	locators = blueprint->getLocators();
-    blueprint->printStructure();
-    std::cout << std::endl;
+//    blueprint->printStructure();
+//    std::cout << std::endl;
 
 	for (std::list<NodeScanner *>::iterator subject = locators.begin();
 			subject != locators.end(); ++subject) {
@@ -84,7 +84,6 @@ XPathScanner::XPathScanner(const std::string& xpath_string) : Name("xpath scanne
 			if (query != subject
 				&& (*query)->isWildcard() == (*subject)->isWildcard()
 				&& (*query)->compareDirectory(*subject)) {
-				std::printf("ERASE %s\n", (*query)->toString().data());
 				query = locators.erase(query);
 			}
 			else
@@ -214,10 +213,6 @@ void XPathScanner::setAdapter(SaxParserAdapter *parser) {
 
 size_t XPathScanner::getSize() const {
 	return cases.size();
-}
-
-BinaryTree *XPathScanner::getBinaryTree() const {
-	return blueprint;
 }
 
 void XPathScanner::newAlpha(const char& c) {
