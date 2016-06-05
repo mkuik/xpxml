@@ -17,9 +17,32 @@
 
 using namespace std;
 
+const char * param[] {
+        "//spectrum_query[position()<6]",
+        "//spectrum_query[((@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6) and (35 or 70)]/search_result/search_hit/@protein | /msms_pipeline_analysis/msms_run_summary/spectrum_query[5]/search_result/search_hit/@protein",
+        "//spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein",
+        "/msms_pipeline_analysis/msms_run_summary/spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) and /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein/text()",
+        "/msms_pipeline_analysis//spectrum_query[@index<=10 and @start_scan>@retention_time_sec]/search_result/search_hit/@protein",
+        "/msms_pipeline_analysis/msms_run_summary/spectrum_query[/search_result/search_hit/@hit_rank!=1]/search_result/search_hit/@protein",
+        "/msms_pipeline_analysis/*/*[@index>4 and @start_scan!=@retention_time_sec]/@index",
+        "/@*/string-length()",
+        "spectrum_query//@peptide | spectrum_query//@protein",
+        "spectrum_query[//@peptide/string-length()>10]/*",
+        "@peptide | @protein",
+        "@protein",
+        "@peptide",
+        "/msms_pipeline_analysis/msms_run_summary/spectrum_query/search_result/search_hit/@peptide/string-length()",
+        "@*"};
+
 void showUsageWarning(const char *tool) {
     // Inform the user of how to use the program
-    std::cout << "Usage is " << tool << " -i <input> -x <xpath> [-o <output>][-xml][-max <id>][-h]\n";
+    std::cout << "Usage is " << tool << " -i <input> -x <xpath> [-o <output>][-xml][-max <id>][-h][-t <n>]\n";
+    int i = 0;
+    std::printf("\nxpath examples (-t)\n-----------------------\n");
+    for (const char * xpath : param) {
+        std::printf("%i\t%s\n", i, xpath);
+        ++i;
+    }
     exit(0);
 }
 
@@ -43,22 +66,7 @@ int main(const int argc, const char** argv) {
             "C:\\Users\\Matthijs Kuik\\Dropbox\\Studie\\Hogeschool Leiden\\Stage\\Data\\10.pep.xml",
             "/media/matthijs/Windows/Documents and Settings/Matthijs/Dropbox/Studie/Hogeschool Leiden/Stage/Data/10.pep.xml",
             "/storage/emulated/0/CppDroid/projects/xpxml/Data/10.pep.xml"};
-    const char * param[] {
-		"//spectrum_query[position()<6]",
-            "//spectrum_query[((@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6) and (35 or 70)]/search_result/search_hit/@protein | /msms_pipeline_analysis/msms_run_summary/spectrum_query[5]/search_result/search_hit/@protein",
-            "//spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein",
-            "/msms_pipeline_analysis/msms_run_summary/spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) and /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein/text()",
-            "/msms_pipeline_analysis//spectrum_query[@index<=10 and @start_scan>@retention_time_sec]/search_result/search_hit/@protein",
-            "/msms_pipeline_analysis/msms_run_summary/spectrum_query[/search_result/search_hit/@hit_rank!=1]/search_result/search_hit/@protein",
-            "/msms_pipeline_analysis/*/*[@index>4 and @start_scan!=@retention_time_sec]/@index",
-            "/@*/string-length()",
-            "spectrum_query//@peptide | spectrum_query//@protein",
-            "spectrum_query[//@peptide/string-length()>10]/*",
-            "@peptide | @protein",
-            "@protein",
-            "@peptide",
-            "/msms_pipeline_analysis/msms_run_summary/spectrum_query/search_result/search_hit/@peptide/string-length()",
-            "@*"};
+
 
     const char * IN = NULL;
     const char * PATH = NULL; // 3,4:error
