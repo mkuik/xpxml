@@ -30,8 +30,6 @@ Node::Node(const Node &node) : Directory(node), ID(node), Value(node) {
 Node::~Node() {
     nodeCount--;
     notifyDestruct(this);
-    if (hasParent()) getParent()->removeChild(this);
-    for (Node * subnode : getChildren()) subnode->clearParent();
 }
 
 std::string Node::toString() const {
@@ -63,23 +61,6 @@ unsigned int Node::getDepth() const {
         return getParent()->getDepth() + (getParent()->getType() != VIRTUAL ? 1 : 0);
     else
         return 0;
-}
-
-id_type Node::getMaxID() const {
-    if(isParent())
-        return getLastChild()->getMaxID();
-    else
-        return getID();
-}
-
-Node * Node::findByID(const id_type &id) const {
-    if(id == getID()) return (Node *) this;
-    else {
-        for(auto it = children.rbegin(); it != children.rend(); ++it) {
-            if((*it)->getID() <= id) return (*it)->findByID(id);
-        }
-        return nullptr;
-    }
 }
 
 Node *Node::getNonVirtualParent() const {

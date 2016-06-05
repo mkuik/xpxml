@@ -47,8 +47,7 @@ void XMLFactory::onNewXPathMatch(Node *node) {
 //		std::printf("xpath found %s\n", node->toString().c_str());
 //	}
 	if(Node *realNode = node->getNonVirtualParent()) {
-		if(Node * node = factoryRoot->findByID(realNode->getID())) {
-			FactoryNode * sector = static_cast<FactoryNode*>(node);
+		if(FactoryNode *sector = factoryRoot->findByID(realNode->getID())) {
 			sector->setConfirmed(true);
 			if(sector->getType() == ATTRIBUTE && sector->hasParent()) {
 				sector->getParent()->setConfirmed(true);
@@ -102,7 +101,7 @@ void XMLFactory::onEndOfElement(Node *node) {
 //		std::printf("end of %s element\n", node->toString().c_str());
 //	}
 	factory = factory->getParent();
-	if(FactoryNode *sector = static_cast<FactoryNode*>(factoryRoot->findByID(node->getID()))) {
+	if(FactoryNode *sector = factoryRoot->findByID(node->getID())) {
 		sector->setParserState(FactoryNode::CLOSED_IN_XML);
 		id_type maxID = sector->getMaxID();
 		std::stringstream stream;
@@ -135,7 +134,12 @@ void XMLFactory::stateChanged(Node *directory) {
                     sector->isClosedInParser() ? "true" : "false",
                     sector->isStoredIndirectly() ? "true" : "false");
     }
-	if (sector->isClosedInParser() && !sector->isStored()) {
+	if (sector->getType() == ELEMENT && sector->isClosedInParser() && !sector->isStored()) {
+		for (FactoryNode * child : sector->getChildren()) {
+			child->notifyChange(child);
+		}
+		addToTrash(sector);
+	} else if (sector->getType() == ATTRIBUTE && sector->hasParent() && !sector->getParent()->isStored()) {
 		addToTrash(sector);
 	}
 }

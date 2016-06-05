@@ -15,8 +15,7 @@ public:
     Children() {}
     ~Children() {
     }
-
-	virtual const std::list<T*>& getChildren() const {
+	const std::list<T*>& getChildren() const {
 		return children;
 	}
     virtual void addChild(T* c) {

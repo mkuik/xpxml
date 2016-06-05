@@ -117,7 +117,7 @@ void mergeIdenticalLocators(BinaryTree *branch,
 }
 
 void merge(NodeScanner *keep, NodeScanner *remove) {
-    for(Node * child: remove->getChildren()) child->setParent(keep);
+    for(NodeScanner * child: remove->getChildren()) child->setParent(keep);
 	if(remove->hasParent()) {
 		remove->getParent()->removeChild(remove);
 		remove->getParent()->addChild(keep);

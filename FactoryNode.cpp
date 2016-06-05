@@ -36,19 +36,33 @@ FactoryNode::FactoryNode(FactoryNode *parent, const std::string &name,
 
 FactoryNode::~FactoryNode() {
 	factoryCount--;
+    if (hasParent()) getParent()->removeChild(this);
+    for (FactoryNode * subnode : getChildren()) subnode->clearParent();
 }
 
 void FactoryNode::setParent(Node *node) {
 	Directory::setParent(node);
 }
 
-void FactoryNode::addChild(Node * child) {
+void FactoryNode::addChild(FactoryNode * child) {
 	Children::addChild(child);
 	if(child->getType() == ELEMENT) ++nSubElements;
 }
 
+
+void FactoryNode::removeChild(FactoryNode *c) {
+    Children::removeChild(c);
+}
+
 FactoryNode *FactoryNode::getParent() const {
 	return static_cast<FactoryNode *>(Parent::getParent());
+}
+
+id_type FactoryNode::getMaxID() const {
+	if(isParent())
+		return getLastChild()->getMaxID();
+	else
+		return getID();
 }
 
 bool FactoryNode::isConfirmed() const {
@@ -60,8 +74,8 @@ bool FactoryNode::isConfirmedIndirectly() const {
 		return true;
 	}
 	else {
-		for(Node * child : getChildren())
-			if(static_cast<FactoryNode*>(child)->isConfirmedIndirectly())
+		for(const FactoryNode * child : getChildren())
+			if(child->isConfirmedIndirectly())
 				return true;
 		return false;
 	}
@@ -80,8 +94,8 @@ bool FactoryNode::isStoredIndirectly() const {
 		return true;
 	}
 	else {
-		for(Node * child : getChildren())
-			if(static_cast<FactoryNode*>(child)->isStoredIndirectly())
+		for(const FactoryNode * child : getChildren())
+			if(child->isStoredIndirectly())
 				return true;
 		return false;
 	}
@@ -144,9 +158,8 @@ void FactoryNode::flushXML(std::ostream &os, const id_type &end) {
 			os << '<';
 			if(getType() == INSTRUCTION) os << '?';
 			os << getName();
-			for(Node * child : getChildren()) {
-				FactoryNode * subnode = static_cast<FactoryNode*>(child);
-				if(static_cast<FactoryNode*>(subnode)->getType() == ATTRIBUTE) {
+			for(FactoryNode *subnode : getChildren()) {
+				if(subnode->getType() == ATTRIBUTE) {
 					os << ' ' << subnode->getName() << "=\"" << subnode->getValue() << "\"";
 					subnode->setOutputState(CLOSED_IN_XML);
 				}
@@ -184,8 +197,7 @@ void FactoryNode::flushXML(std::ostream &os, const id_type &end) {
 
 void FactoryNode::close(std::ostream &os) {
 	if(outputState == OPEN_IN_XML) {
-		for(Node * child : getChildren()) {
-			FactoryNode * subnode = static_cast<FactoryNode*>(child);
+		for(FactoryNode *subnode : getChildren()) {
 			if(subnode->getType() != ATTRIBUTE) {
 				subnode->close(os);
 			}
@@ -198,8 +210,7 @@ void FactoryNode::close(std::ostream &os) {
 		setOutputState(CLOSED_IN_XML);
 	}
 	else if(getType() == VIRTUAL) {
-		for(Node * child : getChildren()) {
-			FactoryNode * subnode = static_cast<FactoryNode*>(child);
+		for(FactoryNode *subnode : getChildren()) {
 			if(subnode->getType() != ATTRIBUTE) {
 				subnode->close(os);
 			}
@@ -208,8 +219,7 @@ void FactoryNode::close(std::ostream &os) {
 }
 
 void FactoryNode::flushXMLsubnodes(std::ostream &os, const id_type &end) {
-	for(Node * child : getChildren()) {
-		FactoryNode * subnode = static_cast<FactoryNode*>(child);
+	for(FactoryNode *subnode : getChildren()) {
 		if(subnode->getType() != ATTRIBUTE) {
 			if(subnode->getID() <= end) 
 				subnode->flushXML(os, end);
@@ -223,14 +233,22 @@ void FactoryNode::flushIndentation(std::ostream &os) const {
 	for(unsigned int i = getDepth(); i != 0; --i) os << "    ";
 }
 
-
+FactoryNode *FactoryNode::findByID(const id_type &id) const {
+	if(id == getID()) return (FactoryNode *) this;
+	else {
+		for(auto it = children.rbegin(); it != children.rend(); ++it) {
+			if((*it)->getID() <= id) return (*it)->findByID(id);
+		}
+		return nullptr;
+	}
+}
 
 void FactoryNode::print() const {
 	if (!hasParent()) std::printf(" stored-confirmed-open, 'x'=true '.'=false '-'=na\n");
 	const char * ENUM_STR = "-x.";
     std::printf(" %c%c%c %s%s\n", stored?'x':'.', confirmed?'x':'.', ENUM_STR[parserState],
 				std::string(getDepth() * 2, ' ').c_str(), toString().c_str());
-	for(Node *subnode : getChildren()) static_cast<FactoryNode*>(subnode)->print();
+	for(FactoryNode *subnode : getChildren()) subnode->print();
 
 }
 
@@ -250,3 +268,12 @@ void FactoryNode::removeListener(FactoryInput *l) {
 bool FactoryNode::hasListener(FactoryInput *l) {
     return FactoryOutput::hasListener(l);
 }
+
+void FactoryNode::notifyChangeInGroup() {
+	for (FactoryNode * child : getChildren()) {
+		child->notifyChangeInGroup();
+	}
+	notifyChange(this);
+}
+
+

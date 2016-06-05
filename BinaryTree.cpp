@@ -228,7 +228,6 @@ Node *BinaryTree::test(BinaryTree *memory) {
 		case INDEX:
 			if(memory) {
 				if(memory->getNode()) {
-//				std::printf("\nindex: compare %u to %u\n", memory->getIndex(), convert<id_type>(getName()));
 					if(memory->getIndex() == convert<id_type>(Directory::getName())) {
 						C = memory->getNode();
 					}
@@ -236,7 +235,6 @@ Node *BinaryTree::test(BinaryTree *memory) {
 						setFalseState();
 					}
 				}
-//			memory->printStructure();
 			}
 			else {
 				setFalseState();
@@ -354,23 +352,7 @@ bool BinaryTree::iscomplete() const {
 
 void BinaryTree::setFalseState() {
 	switch (type) {
-		case VALUE:
-		case FUNC_TEXT:
-		case FUNC_STRING_LENGTH:
-		case NODE:
-		case INDEX:
-			state = FALSE;
-			if (hasParent())
-				getParent()->setFalseState();
-			break;
-		case GREATER:
-		case LESSER:
-		case GREATER_OR_EQUAL:
-		case LESSER_OR_EQUAL:
-		case EQUAL:
-		case UNEQUAL:
-		case CONTAINER:
-		case AND:
+		default:
 			state = FALSE;
 			if (hasParent())
 				getParent()->setFalseState();

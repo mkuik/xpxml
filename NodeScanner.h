@@ -16,6 +16,7 @@
 
 
 class NodeScanner : public Node,
+				   public Children<NodeScanner>,
                    public SaxParserListener,
                    public NodeScannerAdapter {
 public:
@@ -28,7 +29,7 @@ private:
 public:
 	NodeScanner(NodeScanner *, NodeType, Edge);
 	~NodeScanner();
-	virtual NodeScanner * getParent() const override;
+    virtual NodeScanner * getParent() const override;
     void setParent(NodeScanner *);
 	virtual void setName(const std::string&) override;
 	Edge getConnectionType() const;

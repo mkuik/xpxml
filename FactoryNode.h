@@ -13,6 +13,7 @@
 
 class FactoryNode :
         public Node,
+        public Children<FactoryNode>,
         public FactoryOutput,
         public ObjectTypeCounter,
         public DestructorListener {
@@ -31,11 +32,12 @@ public:
     FactoryNode(FactoryNode *parent, const std::string &, const std::string &,
                 const NodeType&, const State &state);
     virtual ~FactoryNode();
-	void addChild(Node *) override;
+	void addChild(FactoryNode *) override;
     void setConfirmed(const bool&);
     void setStored(const bool&);
     void setParserState(const State&);
     void setOutputState(const State&);
+    id_type getMaxID() const;
 	bool isConfirmed() const;
     bool isConfirmedIndirectly() const;
     bool isConfirmedFromParent() const;
@@ -49,26 +51,18 @@ public:
     virtual FactoryNode * getParent() const override;
     void flushXML(std::ostream&, const id_type&);
     void close(std::ostream&);
+    FactoryNode * findByID(const id_type&) const;
     void print() const;
-
     virtual void onDestruct(void *pVoid) override;
-
     virtual void addListener(FactoryInput *l) override;
-
     virtual void removeListener(FactoryInput *l) override;
-
     virtual bool hasListener(FactoryInput *l) override;
-
-private:
-    //void flushElementOpenTag(std::ostream&);
-    //void flushElementCloseTag(std::ostream&);
-    //void flushAttribute(std::ostream&);
-    void flushIndentation(std::ostream&) const;
-    //void flushElementSingle(std::ostream &os);
-    void flushXMLsubnodes(std::ostream &os, const id_type &end);
-
-public:
+	virtual void removeChild(FactoryNode *c) override;
 	virtual void setParent(Node *node) override;
+	void notifyChangeInGroup();
+private:
+    void flushIndentation(std::ostream&) const;
+    void flushXMLsubnodes(std::ostream &os, const id_type &end);
 };
 
 #endif /* XMLFACTORYNODE_H_ */
