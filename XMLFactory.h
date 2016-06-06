@@ -20,7 +20,6 @@ class XMLFactory : public Factory,
 	FactoryNode *factory, *factoryRoot;
 	const bool DEBUG = true;
 	id_type nNew = 0, nDelete = 0;
-	std::list<FactoryNode*> bucket;
 public:
 	XMLFactory(const std::string&);
 	~XMLFactory();

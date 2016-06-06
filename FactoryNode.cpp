@@ -6,8 +6,10 @@
  */
 
 #include "FactoryNode.h"
+#include "Globals.h"
 
 id_type FactoryNode::factoryCount = 0;
+std::list<FactoryNode*> FactoryNode::objects;
 
 FactoryNode::FactoryNode(FactoryNode *parent, Node &node, const State& state):
 	Node(node), parserState(state) {
@@ -20,6 +22,8 @@ FactoryNode::FactoryNode(FactoryNode *parent, Node &node, const State& state):
     setStored(true);
     node.addListener(this);
 	factoryCount++;
+
+	objects.push_back(this);
 }
 
 
@@ -32,12 +36,17 @@ FactoryNode::FactoryNode(FactoryNode *parent, const std::string &name,
     }
     if(getType() == INSTRUCTION) setConfirmed(true);
 	factoryCount++;
+
+	objects.push_back(this);
 }
 
 FactoryNode::~FactoryNode() {
+//	std::printf("DEL %p %s\n", (void*) this, toString().data());
 	factoryCount--;
-    if (hasParent()) getParent()->removeChild(this);
-    for (FactoryNode * subnode : getChildren()) subnode->clearParent();
+	for (FactoryNode *subnode : getChildren()) subnode->clearParent();
+	if (hasParent()) getParent()->removeChild(this);
+
+	objects.remove(this);
 }
 
 void FactoryNode::setParent(Node *node) {

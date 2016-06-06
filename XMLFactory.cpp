@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include "XMLFactory.h"
+#include "Globals.h"
 
 XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath) {
 	factory = new FactoryNode(0, "root", "", VIRTUAL, FactoryNode::INIT);
@@ -11,6 +12,11 @@ XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath) {
 }
 
 XMLFactory::~XMLFactory() {
+	cleanup();
+
+	while (!FactoryNode::objects.empty()) {
+		delete FactoryNode::objects.back();
+	}
 }
 
 void XMLFactory::setAdapter(SaxParserAdapter *parser) {
@@ -49,7 +55,6 @@ void XMLFactory::onNewXPathMatch(Node *node) {
 // 1a
 // The parser created a new element
 void XMLFactory::onNewElement(Node *node) {
-	emptyTrash();
 	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::OPEN_IN_XML);
 	fNode->addListener(this);
 	factory = fNode;
@@ -78,6 +83,7 @@ void XMLFactory::onEndOfElement(Node *node) {
 		factoryRoot->flushXML(stream, maxID);
 		moveStream(stream);
 	}
+	emptyTrash();
 }
 
 // An XMLFactoryNode was used as output

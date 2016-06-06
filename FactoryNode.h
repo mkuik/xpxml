@@ -27,6 +27,7 @@ private:
 	bool sealedAttributes = false;
 	unsigned int nSubElements = 0;
 public:
+	static std::list<FactoryNode*> objects;
 	static id_type factoryCount;
     FactoryNode(FactoryNode *parent, Node &node, const State &state);
     FactoryNode(FactoryNode *parent, const std::string &, const std::string &,

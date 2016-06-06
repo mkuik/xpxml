@@ -8,6 +8,7 @@
 
 #include <iosfwd>
 #include <ios>
+#include <list>
 
 class Globals {
 public:

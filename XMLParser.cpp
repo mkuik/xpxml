@@ -40,12 +40,8 @@ int XMLParser::parse(const char *file, const char *xpath, const Method &method) 
     doStatusReport();
     std::printf("\n");
 
-    if (XMLFactory *fac = dynamic_cast < XMLFactory * >(factory))
-        fac->cleanup();
-
 	delete parser;
     delete factory;
-
 
     return i;
 }
