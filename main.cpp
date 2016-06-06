@@ -18,7 +18,7 @@
 using namespace std;
 
 const char * param[] {
-        "//spectrum_query[position()<6]",
+        "//spectrum_query[position()<50]",
         "//spectrum_query[((@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6) and (35 or 70)]/search_result/search_hit/@protein | /msms_pipeline_analysis/msms_run_summary/spectrum_query[5]/search_result/search_hit/@protein",
         "//spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) or /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein",
         "/msms_pipeline_analysis/msms_run_summary/spectrum_query[(@index>=4 and @start_scan!=@retention_time_sec) and /search_result/search_hit/@hit_rank<6]/search_result/search_hit/@protein/text()",
@@ -66,7 +66,6 @@ int main(const int argc, const char** argv) {
             "C:\\Users\\Matthijs Kuik\\Dropbox\\Studie\\Hogeschool Leiden\\Stage\\Data\\10.pep.xml",
             "/media/matthijs/Windows/Documents and Settings/Matthijs/Dropbox/Studie/Hogeschool Leiden/Stage/Data/10.pep.xml",
             "/storage/emulated/0/CppDroid/projects/xpxml/Data/10.pep.xml"};
-
 
     const char * IN = NULL;
     const char * PATH = NULL; // 3,4:error
@@ -124,6 +123,7 @@ int main(const int argc, const char** argv) {
                 delete limit;
             }
             parser->parse(IN, PATH, METHOD);
+            delete parser;
         }
         catch (std::runtime_error e) {
             std::cout << e.what() << "\n";

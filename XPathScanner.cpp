@@ -135,12 +135,14 @@ XPathScanner::~XPathScanner() {
 	locators.unique();
 
 	delete blueprint;
+	emptyTrash();
 
 	for (auto it = locators.begin(); it != locators.end();) {
 		NodeScanner * node = *it;
 		it = locators.erase(it);
 		delete node;
 	}
+
 }
 
 void XPathScanner::onAllocatedToBranch(Directory * source, Node* ) {

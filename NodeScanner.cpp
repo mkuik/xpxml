@@ -34,13 +34,6 @@ void NodeScanner::onNewNode(Node *node) {
 
 bool NodeScanner::compareDirectory(Node *query, const NodeScanner *source) const {
 
-//	if (query) {
-//		std::printf("%s compare %2u %i%i.%-22s %i.%-22s\n", source ? " " : "-", getID(),
-//					getConnectionType(), getType(), (getName() + (isWildcard() ? "(wildcard)" : "")).data(),
-//					query->getType(), query->getName().c_str());
-//	}
-
-
 	if (!query) {
 		return false;
 	} else if (query->getType() == getType() && (isWildcard() || getName().compare(query->getName()) == 0)) {

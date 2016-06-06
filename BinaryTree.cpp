@@ -247,8 +247,7 @@ Node *BinaryTree::test(BinaryTree *memory) {
 			if (!getNode() && memory->getNode()) {
 				std::stringstream value;
 				value << memory->getNode()->getValue().length();
-				C = new Node("length(" + memory->getNode()->getValue() + ")", value.str(), memory->getNode());
-				setNode(C);
+				setNode(new Node("length(" + memory->getNode()->getValue() + ")", value.str(), memory->getNode()));
 			}
 			C = getNode();
 			break;
@@ -256,8 +255,7 @@ Node *BinaryTree::test(BinaryTree *memory) {
 			if (!getNode() && memory->getNode()) {
 				std::stringstream value;
 				value << memory->getIndex();
-				C = new Node("position(" + memory->getName() + ")", value.str(), memory->getNode());
-				setNode(C);
+				setNode(new Node("position(" + memory->getName() + ")", value.str(), memory->getNode()));
 			}
 			C = getNode();
 			break;
@@ -267,11 +265,8 @@ Node *BinaryTree::test(BinaryTree *memory) {
 			break;
 	}
 
-	if (C) {
+	if (C) 
 		state = TRUE;
-	}
-
-//	std::printf("test %s -> %s\n", getPath().data(), C ? C->getPath().data() : "0");
 	return C;
 }
 

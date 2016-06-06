@@ -20,7 +20,6 @@ void SharedNodeContainer::setNode(Node *node) {
     if (node) {
         data = node;
         data->notifyLink();
-//        std::cout << "set node " << node->toString() << " " << node->getValue() <<  "\n";
     }
 }
 
