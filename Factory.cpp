@@ -52,10 +52,10 @@ Factory::Factory(const std::string &xpath) : Name("factory") {
 
 Factory::~Factory() {
     Globals::DESTRUCTING = true;
-    for (auto it : structures) {
-        delete it;
-    }
+    deleteXPathScanners();
 }
+
+
 
 void Factory::setAdapter(SaxParserAdapter *parser) {
     for (XPathScanner *tree : structures) {
@@ -88,3 +88,13 @@ void Factory::onNewXPathMatch(Node *node) {
     XPathScannerListener::onNewXPathMatch(node);
     notifyHit(node);
 }
+
+void Factory::deleteXPathScanners() {
+    for (auto it = structures.begin(); it != structures.end(); ) {
+        XPathScanner * scanner = *it;
+        it = structures.erase(it);
+        delete scanner;
+    }
+}
+
+

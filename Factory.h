@@ -21,6 +21,7 @@ protected:
 public:
 	Factory(const std::string&);
 	~Factory();
+	void deleteXPathScanners();
 	virtual void setAdapter(SaxParserAdapter *);
 	void moveStream(std::stringstream&);
 	virtual size_t size() const = 0;

@@ -26,8 +26,8 @@ private:
     bool stored = false;
 	bool sealedAttributes = false;
 	unsigned int nSubElements = 0;
+	static bool recusiveLink;
 public:
-	static std::list<FactoryNode*> objects;
 	static id_type factoryCount;
     FactoryNode(FactoryNode *parent, Node &node, const State &state);
     FactoryNode(FactoryNode *parent, const std::string &, const std::string &,
@@ -58,6 +58,8 @@ public:
 	virtual void removeChild(FactoryNode *c) override;
 	virtual void setParent(Node *node) override;
 	void notifyChangeInGroup();
+	static bool isRecusiveLink();
+	static void setRecusiveLink(bool recusiveLink);
 private:
     void flushIndentation(std::ostream&) const;
     void flushXMLsubnodes(std::ostream &os, const id_type &end);

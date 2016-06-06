@@ -12,11 +12,10 @@ XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath) {
 }
 
 XMLFactory::~XMLFactory() {
+	deleteXPathScanners();
 	cleanup();
-
-	while (!FactoryNode::objects.empty()) {
-		delete FactoryNode::objects.back();
-	}
+	FactoryNode::setRecusiveLink(true);
+	delete factoryRoot;
 }
 
 void XMLFactory::setAdapter(SaxParserAdapter *parser) {
