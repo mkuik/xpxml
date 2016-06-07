@@ -20,7 +20,7 @@ FactoryNode::FactoryNode(FactoryNode *parent, Node &node, const State& state):
 	if(getType() == INSTRUCTION) setConfirmed(true);
 
     setStored(true);
-    node.addListener(this);
+    if (getType() != ATTRIBUTE) node.addListener(this);
 	factoryCount++;
 }
 

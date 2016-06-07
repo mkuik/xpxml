@@ -57,6 +57,8 @@ void XMLFactory::onNewElement(Node *node) {
 	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::OPEN_IN_XML);
 	fNode->addListener(this);
 	factory = fNode;
+
+	emptyTrash();
 }
 
 
@@ -82,7 +84,6 @@ void XMLFactory::onEndOfElement(Node *node) {
 		factoryRoot->flushXML(stream, maxID);
 		moveStream(stream);
 	}
-	emptyTrash();
 }
 
 // An XMLFactoryNode was used as output
