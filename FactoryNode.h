@@ -9,14 +9,14 @@
 #define XMLFACTORYNODE_H_
 
 #include "Node.h"
-#include "FactoryContact.h"
+#include "FactoryNodeAdapter.h"
 
 class FactoryNode :
         public Node,
         public Children<FactoryNode>,
-        public FactoryOutput,
+        public FactoryAdapter,
         public ObjectTypeCounter,
-        public DestructorListener {
+        public NodeListener {
 public:
     enum State { INIT, OPEN_IN_XML, CLOSED_IN_XML };
 private:
@@ -51,10 +51,11 @@ public:
     void close(std::ostream&);
     FactoryNode * findByID(const id_type&) const;
     void print() const;
-    virtual void onDestruct(void *pVoid) override;
-    virtual void addListener(FactoryInput *l) override;
-    virtual void removeListener(FactoryInput *l) override;
-    virtual bool hasListener(FactoryInput *l) override;
+    virtual void onNodeDestruct() override;
+	virtual void onNodeClosed() override;
+    virtual void addListener(FactoryListener *l) override;
+    virtual void removeListener(FactoryListener *l) override;
+    virtual bool hasListener(FactoryListener *l) override;
 	virtual void removeChild(FactoryNode *c) override;
 	virtual void setParent(Node *node) override;
 	void notifyChangeInGroup();

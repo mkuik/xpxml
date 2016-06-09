@@ -74,62 +74,76 @@ int main(const int argc, const char** argv) {
 
     if (argc < 3) {
         showUsageWarning(argv[0]);
-    } else { // if we got enough parameters...
-        unsigned int *limit = 0;
+	}
+	else { // if we got enough parameters...
+		unsigned int *limit = 0;
 
-        for (int i = 0; i != argc; i++) {
-            if (strcmp(argv[i], "-xml") == 0) {
-                METHOD = XMLParser::TO_XML;
-            } else if (i + 1 != argc) {
-                if (strcmp(argv[i], "-i") == 0) {
-                    IN = argv[i + 1];
-                } else if (strcmp(argv[i], "-o") == 0) {
-                    OUT = argv[i + 1];
-                } else if (strcmp(argv[i], "-x") == 0) {
-                    PATH = argv[i + 1];
-                } else if (strcmp(argv[i], "-max") == 0) {
-                    limit = new unsigned int(
-                            convert<unsigned int>(argv[i + 1]));
-                } else if (strcmp(argv[i], "-t") == 0) {
-                    try {
-                        int index = convert<int>(argv[i + 1]);
-                        PATH = param[index];
-                    } catch (std::exception &e) {
-                        std::printf("error: expected integer after -t option");
-                        showUsageWarning(argv[0]);
-                    }
-                } else if (strcmp(argv[i], "-h") == 0) {
-                    showUsageWarning(argv[0]);
-                }
-            }
-        }
+		for(int i = 0; i != argc; i++) {
+			if(strcmp(argv[i], "-xml") == 0) {
+				METHOD = XMLParser::TO_XML;
+			}
+			else if(i + 1 != argc) {
+				if(strcmp(argv[i], "-i") == 0) {
+					IN = argv[i + 1];
+				}
+				else if(strcmp(argv[i], "-o") == 0) {
+					OUT = argv[i + 1];
+				}
+				else if(strcmp(argv[i], "-x") == 0) {
+					PATH = argv[i + 1];
+				}
+				else if(strcmp(argv[i], "-max") == 0) {
+					limit = new unsigned int(
+						convert<unsigned int>(argv[i + 1]));
+				}
+				else if(strcmp(argv[i], "-t") == 0) {
+					try {
+						PATH = param[convert<int>(argv[i + 1])];
+					}
+					catch(std::exception &e) {
+						std::printf("error: expected integer after -t option");
+						showUsageWarning(argv[0]);
+					}
+				}
+				else if(strcmp(argv[i], "-h") == 0) {
+					showUsageWarning(argv[0]);
+				}
+			}
+		}
 
-        if (IN == NULL) showUsageWarning(argv[0]);
-        if (PATH == NULL) showUsageWarning(argv[0]);
+//		for(const char * PATH : param) {
+			std::printf("xpath: %s\n", PATH);
 
-        Globals::FILESIZE = fileSize(IN);
+			if(IN == NULL) showUsageWarning(argv[0]);
+			if(PATH == NULL) showUsageWarning(argv[0]);
 
-        ofstream of;
-        try {
-            XMLParser * parser = 0;
-            if (OUT == NULL) {
-                parser = new XMLParser(std::cout);
-            } else {
-                of.open(OUT, std::ios::out);
-                parser = new XMLParser(of);
-            }
-            if (limit) {
-                parser->setNodeIDLimit(*limit);
-                delete limit;
-            }
-            parser->parse(IN, PATH, METHOD);
-            delete parser;
-        }
-        catch (std::runtime_error e) {
-            std::cout << e.what() << "\n";
-        }
-        of.close();
+			Globals::FILESIZE = fileSize(IN);
 
-    }
+			ofstream of;
+			try {
+				XMLParser * parser = 0;
+				if(OUT == NULL) {
+					parser = new XMLParser(std::cout);
+				}
+				else {
+					of.open(OUT, std::ios::out);
+					parser = new XMLParser(of);
+				}
+				if(limit) {
+					parser->setNodeIDLimit(*limit);
+					delete limit;
+				}
+				parser->parse(IN, PATH, METHOD);
+				delete parser;
+			}
+			catch(std::runtime_error e) {
+				std::cout << e.what() << "\n";
+			}
+			of.close();
+
+		}
+//	}
+	char c;
+//	std::cin >> c;
     return 0;
 }

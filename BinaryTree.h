@@ -20,6 +20,7 @@ class BinaryTree : public SharedNodeContainer,
 		public Directory,
 		public ID,
 		public NodeScannerListener,
+		public NodeListener,
 		public BinaryTreeAdapter {
 public:
 	enum State {
@@ -48,14 +49,16 @@ public:
 	void setFalseState();
 
 	void onFoundNode(Node *) override; // NodeScanner input
+	void onNodeClosed() override; // Node input
 
+	bool isfilled() const;
 	bool ismember(Node *) const;
 	bool iscomplete() const;
     bool hasComparisonBeforeNodeParent() const;
 
 	BinaryTree * getParent() const override;
-	BinaryTree * getLeft();
-	BinaryTree * getRight();
+	BinaryTree * getLeft()const;
+	BinaryTree * getRight()const;
 	NodeScanner * getDataCollector();
 	const XPathSyntaxType& getType() const;
 	const State& getState() const;

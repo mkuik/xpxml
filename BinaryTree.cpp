@@ -280,12 +280,21 @@ void BinaryTree::onFoundNode(Node *node) {
 	}
 }
 
+void BinaryTree::onNodeClosed() {
+	if (!isfilled()) setFalseState();
+}
 
 void BinaryTree::setNode(Node *node) {
 	SharedNodeContainer::setNode(node);
+	node->addListener(this);
+//	std::printf("LINK %s\n", node->toString().data());
 //	printStructure();
 }
 
+
+bool BinaryTree::isfilled() const {
+	return !(getType() == NODE && getNode() == 0 || getLeft() && !getLeft()->isfilled() || getRight() && !getRight()->isfilled());
+}
 
 bool BinaryTree::ismember(Node * node) const {
 	if (type == NODE) {
@@ -314,11 +323,11 @@ std::list<NodeScanner *> BinaryTree::getLocators() const {
 	return list;
 }
 
-BinaryTree *BinaryTree::getLeft() {
+BinaryTree * BinaryTree::getLeft()const {
 	return left;
 }
 
-BinaryTree *BinaryTree::getRight() {
+BinaryTree * BinaryTree::getRight()const {
 	return right;
 }
 
@@ -468,9 +477,16 @@ void BinaryTree::printStructure() const {
 
 void BinaryTree::removeNode() {
 	Node * node = getNode();
+	if (node) node->removeListener(this);
 //	std::printf("DELETE %s BRANCH NODE\n", Directory::getName().data());
 	SharedNodeContainer::removeNode();
 	if (node && node->getLink() == 0) {
 		delete node;
 	}
 }
+
+
+
+
+
+

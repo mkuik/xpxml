@@ -77,21 +77,13 @@ void XMLFactory::onNewAttribute(Node *node) {
 // The parser closed an element
 void XMLFactory::onEndOfElement(Node *node) {
 	factory = factory->getParent();
-	if(FactoryNode *sector = factoryRoot->findByID(node->getID())) {
-		sector->setParserState(FactoryNode::CLOSED_IN_XML);
-		id_type maxID = sector->getMaxID();
-		std::stringstream stream;
-		factoryRoot->flushXML(stream, maxID);
-		moveStream(stream);
-	}
 }
 
 // An XMLFactoryNode was used as output
-void XMLFactory::stateChanged(Node *directory) {
-	FactoryNode * sector = static_cast<FactoryNode *>(directory);
+void XMLFactory::stateChanged(FactoryNode * sector) {
 	if (sector->getType() == ELEMENT && sector->isClosedInParser() && !sector->isStored()) {
 		for (FactoryNode * child : sector->getChildren()) {
-			child->notifyChange(child);
+			stateChanged(child);
 		}
 		addToTrash(sector);
 	} else if (sector->getType() == ATTRIBUTE && sector->hasParent() && !sector->getParent()->isStored()) {
@@ -107,11 +99,32 @@ void XMLFactory::onNewNode(Node *node) {
 	nNew++;
 }
 
-void XMLFactory::factoryDestructor(Node *directory) {
-    nDelete++;
-}
-
 void XMLFactory::removeFromTrash(FactoryNode * node) {
 	SecureTrashBin::removeFromTrash(node);
 	delete node;
 }
+
+void XMLFactory::onFactoryNodeDeleted(void *source, id_type id) {
+	nDelete++;
+}
+
+void XMLFactory::onFactoryNodeClosedInParser(void *source, id_type id) {
+	id_type maxID = static_cast<FactoryNode*>(source)->getMaxID();
+	std::stringstream stream;
+	factoryRoot->flushXML(stream, maxID);
+	moveStream(stream);
+}
+
+void XMLFactory::onFactoryNodeClosedInOutput(void *source, id_type id) {
+	stateChanged(static_cast<FactoryNode*>(source));
+}
+
+void XMLFactory::onFactoryNodeSourceDeleted(void *source, id_type id) {
+	stateChanged(static_cast<FactoryNode*>(source));
+}
+
+
+
+
+
+

@@ -39,6 +39,7 @@ FactoryNode::FactoryNode(FactoryNode *parent, const std::string &name,
 FactoryNode::~FactoryNode() {
 //	std::printf("DEL %p %s\n", (void*) this, toString().data());
 	factoryCount--;
+	notifyFactoryNodeDeleted(this, getID());
 	if (recusiveLink) {
 		for (auto it = children.begin(); it != children.end();) {
 			FactoryNode * child = *it;
@@ -126,20 +127,20 @@ void FactoryNode::setConfirmed(const bool &YN) {
 
 void FactoryNode::setStored(const bool &YN) {
     stored = YN;
-    notifyChange(this);
+    notifyFactoryNodeSourceDeleted(this, getID());
 }
 
 void FactoryNode::setParserState(const State &state) {
     if (parserState != state) {
         parserState = state;
-        notifyChange(this);
+        notifyFactoryNodeClosedInParser(this, getID());
     }
 }
 
 void FactoryNode::setOutputState(const State &state) {
     if (outputState != state) {
         outputState = state;
-        notifyChange(this);
+        notifyFactoryNodeClosedInOutput(this, getID());
     }
 }
 
@@ -250,27 +251,30 @@ void FactoryNode::print() const {
 
 }
 
-void FactoryNode::onDestruct(void * pointer) {
+void FactoryNode::onNodeDestruct() {
     setStored(false);
 }
 
-void FactoryNode::addListener(FactoryInput *l) {
-    FactoryOutput::addListener(l);
+void FactoryNode::onNodeClosed() {
+	setParserState(CLOSED_IN_XML);
 }
 
-void FactoryNode::removeListener(FactoryInput *l) {
-    FactoryOutput::removeListener(l);
+void FactoryNode::addListener(FactoryListener *l) {
+    FactoryAdapter::addListener(l);
 }
 
-bool FactoryNode::hasListener(FactoryInput *l) {
-    return FactoryOutput::hasListener(l);
+void FactoryNode::removeListener(FactoryListener *l) {
+    FactoryAdapter::removeListener(l);
+}
+
+bool FactoryNode::hasListener(FactoryListener *l) {
+    return FactoryAdapter::hasListener(l);
 }
 
 void FactoryNode::notifyChangeInGroup() {
 	for (FactoryNode * child : getChildren()) {
 		child->notifyChangeInGroup();
 	}
-	notifyChange(this);
 }
 
 void FactoryNode::setRecusiveLink(bool recusiveLink) {
@@ -280,6 +284,8 @@ void FactoryNode::setRecusiveLink(bool recusiveLink) {
 bool FactoryNode::isRecusiveLink() {
 	return recusiveLink;
 }
+
+
 
 
 

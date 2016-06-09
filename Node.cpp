@@ -6,6 +6,7 @@
  */
 
 #include "Node.h"
+#include "Globals.h"
 #include <sstream>
 
 id_type Node::nodeCount = 0;
@@ -29,12 +30,12 @@ Node::Node(const Node &node) : Directory(node), ID(node), Value(node) {
 
 Node::~Node() {
     nodeCount--;
-    notifyDestruct(this);
+    notifyNodeDestruct();
 }
 
 std::string Node::toString() const {
     std::stringstream s;
-    s << getName() << ";id:" << getID() << ";#link:" << getLink();
+    s << getID() << ":" << getName() << "=" << getValue();
     return s.str();
 }
 
@@ -79,7 +80,7 @@ std::string Node::getPath() const {
     return path.str();
 }
 
-void Node::addListener(DestructorListener *l) {
+void Node::addListener(NodeListener *l) {
     Adapter::addListener(l);
 }
 
@@ -95,6 +96,14 @@ void Node::notifyLink() {
     ++link;
 }
 
+bool Node::isOpen() const {
+    return open;
+}
+
+void Node::setOpen(bool open) {
+    Node::open = open;
+    notifyNodeClosed();
+}
 
 
 

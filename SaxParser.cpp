@@ -39,7 +39,7 @@ int SaxParser::parse(const char * filename) {
 		position++;
 		int key = pbuf->sbumpc();
 
-//		std::cout << (char)key << "\n";
+//		std::cout << (char)key << "";
 
 		switch(state) {
 		case NEW_ELEMENT:
@@ -142,6 +142,7 @@ int SaxParser::parse(const char * filename) {
 				while(pbuf->sgetc() != EOF) {
 					position++;
 					auto key = pbuf->sbumpc();
+//					std::cout << (char) key << "";
 					if(key == '"') break;
 					node->addToValue(key);
 				}
@@ -210,15 +211,16 @@ unsigned long SaxParser::getPosition() const {
 }
 
 void SaxParser::newElement(Node* node) {
-	//std::cout << node->nodeCount<<  " ELE " << node->toString() << std::endl;
+//	std::cout << "\nELE " << node->toString() << std::endl;
 	activated = node;
 	notifyNewElement(node);
 	notifyNewNode(node);
 }
 
 void SaxParser::endElement(Node* node) {
-	//std::cout << "\nEOF " << node->toString() << std::endl;
+//	std::cout << "\nEOF " << node->toString() << std::endl;
 	activated = node;
+	node->setOpen(false);
 	notifyEndOfElement(node);
 
 	if (node->getLink() == 0) {
@@ -227,7 +229,7 @@ void SaxParser::endElement(Node* node) {
 }
 
 void SaxParser::newAttribute(Node* node) {
-	//std::cout << "\nATT " << node->toString() << std::endl;
+//	std::cout << "\nATT " << node->toString() << std::endl;
 	activated = node;
 	notifyNewAttribute(node);
 	notifyNewNode(node);
@@ -238,7 +240,7 @@ void SaxParser::newAttribute(Node* node) {
 }
 
 void SaxParser::newComment(Node * node) {
-	//std::cout << "\nCOM " << node->toString() << std::endl;
+//	std::cout << "\nCOM " << node->toString() << std::endl;
 	activated = node;
 	notifyComment(node);
 

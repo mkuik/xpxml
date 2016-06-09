@@ -17,16 +17,18 @@
 #include "Value.h"
 #include "Namespace.h"
 #include "DestructorAdapter.h"
+#include "NodeAdapter.h"
 
 class Node :
         public Directory,
         public ID,
         public Value,
         public Namespace,
-        public DestructorAdapter {
+        public NodeAdapter {
     NodeType type;
     std::string xml_namespace;
     unsigned short link = 0;
+    bool open = true;
 public:
     static id_type nodeCount;
 
@@ -55,13 +57,17 @@ public:
 
     virtual std::string toString() const override;
 
-    virtual void addListener(DestructorListener *l) override;
+    virtual void addListener(NodeListener *l) override;
 
     void notifyLink();
 
     void notifyUnlink();
 
     unsigned short getLink() const;
+
+    bool isOpen() const;
+
+    void setOpen(bool open);
 };
 
 

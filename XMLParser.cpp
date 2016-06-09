@@ -97,8 +97,8 @@ void XMLParser::doStatusReport() {
         time << seconds << "s";
 //        time << ms % 1000 << "";
 
-        std::printf("Parsing... %i%%  ETA:%s  %.1fmbps   \r", ((int) (progress * 100 + 0.5)),
-                    time.str().data(), mbps);
+        std::printf("Parsing... %i%%  ETA:%s  %.1fmbps  %li matches  \r", ((int) (progress * 100 + 0.5)),
+                    time.str().data(), mbps, hits);
     }
 }
 

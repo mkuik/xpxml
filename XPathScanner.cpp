@@ -147,8 +147,8 @@ XPathScanner::~XPathScanner() {
 
 void XPathScanner::onAllocatedToBranch(Directory * source, Node* ) {
 	BinaryTree * tree = static_cast<BinaryTree *>(source->getTopParent());
-	//std::printf("ALLOCATED TO BRANCH\n");
-	//tree->printStructure();
+//	std::printf("ALLOCATED TO BRANCH\n");
+//	tree->printStructure();
 	
 	if (activated == 0) activated = tree;
 	if (tree->iscomplete()) return;
@@ -191,6 +191,8 @@ void XPathScanner::removeUnusedCases() {
 		if(tree->iscomplete()) {
 			it = cases.erase(it);
 			addToTrash(tree);
+//			std::printf("TO TRASH\n");
+//			tree->printStructure();
 		}
 		else {
 			++it;

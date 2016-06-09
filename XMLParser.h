@@ -8,9 +8,9 @@
 
 #include "SaxParser.h"
 #include "Factory.h"
-#include "FactoryContact.h"
+#include "FactoryNodeAdapter.h"
 
-class XMLParser: public SaxParserListener, public WriteInput, public FactoryInput {
+class XMLParser: public SaxParserListener, public WriteInput, public FactoryListener {
 public:
 	enum Method { GET_VALUES, TO_XML };
 private:
