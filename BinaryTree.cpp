@@ -24,8 +24,8 @@ BinaryTree::BinaryTree(BinaryTree * ben, std::vector<std::string>::iterator begi
 
 	if (type == NODE) {
 		BinaryTree *p = ben;
-		while (p && p->getDataCollector() == 0) p = p->getParent();
-		NodeScanner * parent = p ? p->getDataCollector() : 0;
+		while (p && p->getScanner() == 0) p = p->getParent();
+		NodeScanner * parent = p ? p->getScanner() : 0;
 		source = new NodeScanner(parent, factory.getNodeType(), factory.getNodePathLink());
 		source->setName(Directory::getName());
 	} else if (type == VALUE) {
@@ -287,21 +287,30 @@ void BinaryTree::onNodeClosed() {
 void BinaryTree::setNode(Node *node) {
 	SharedNodeContainer::setNode(node);
 	node->addListener(this);
-//	std::printf("LINK %s\n", node->toString().data());
-//	printStructure();
 }
 
 
 bool BinaryTree::isfilled() const {
-	return !(getType() == NODE && getNode() == 0 || getLeft() && !getLeft()->isfilled() || getRight() && !getRight()->isfilled());
+	if (source && source->getConnectionType() != NodeScanner::EDGE_ROOT) return true;
+	return !((getType() == NODE && getNode() == 0) ||
+			(getLeft() && !getLeft()->isfilled()) ||
+			(getRight() && !getRight()->isfilled()));
 }
 
 bool BinaryTree::ismember(Node * node) const {
 	if (type == NODE) {
+		return getNode() && getNode()->getID() == node->getID();
+	} else if (hasParent()) {
+		return getParent()->ismember(node);
+	} else {
+		return true;
+	}
+
+	if (type == NODE) {
 		if (getNode()) {
 			return getNode()->getID() == node->getID();
-		} else if (hasParent() && source
-				&& source->getConnectionType() == NodeScanner::EDGE_ANCESTOR) {
+		} else if (hasParent() && getScanner()
+				&& getScanner()->getConnectionType() == NodeScanner::EDGE_ANCESTOR) {
 			for (Node * x = node->getParent(); x; x = x->getParent()) {
 				if (getParent()->ismember(x)) {
 					return true;
@@ -380,7 +389,6 @@ void BinaryTree::setFalseState() {
 		case NOT:
 			break;
 	}
-
 }
 
 BinaryTree *BinaryTree::getParent() const {
@@ -391,11 +399,11 @@ const XPathSyntaxType&BinaryTree::getType() const {
 	return type;
 }
 
-NodeScanner *BinaryTree::getDataCollector() {
+NodeScanner * BinaryTree::getScanner()const {
 	return source;
 }
 
-void BinaryTree::setSource(NodeScanner * source) {
+void BinaryTree::setScanner(NodeScanner *source) {
 	this->source = source;
 }
 
@@ -449,19 +457,15 @@ void BinaryTree::printStructure() const {
 	if (!hasParent()) {
 		std::cout << ".";
 		for (int i = -2; i != WIDTH; ++i) std::cout << "-";
-//		std::cout << "." << std::endl;
 		std::cout << std::endl;
 	}
 
-	std::stringstream sformat;
-//	sformat << "| %-" << WIDTH << "s |";
-	sformat << "| %s";
-	std::string sdata(getDepth() * 3, ' ');
-	if (getNode() != nullptr) sdata += Directory::getName() + ":" + getNode()->getName() + " " + (getNode()->getType() != ELEMENT ? getNode()->getValue() : "");
-	else sdata += getName();
-	std::printf(sformat.str().c_str(), sdata.c_str());
-    if (getType() == NODE && getNode()) std::printf(" %4u %4i", getIndex(), getNode()->getID());
-    std::printf("\n");
+	if (getNode()) {
+		std::printf("| %s%s[%i]:%s\n", std::string(getDepth() * 2, ' ').data(), getName().data(), getIndex(),
+					(getNode()->getName() + (getNode()->getType() != ELEMENT ? "=" + getNode()->getValue() : "")).data());
+	} else {
+		std::printf("| %s%s\n", std::string(getDepth() * 2, ' ').data(), getName().data());
+	}
 
 	if (left) left->printStructure();
 	if (right) right->printStructure();
@@ -469,7 +473,6 @@ void BinaryTree::printStructure() const {
 	if (!hasParent()) {
 		std::cout << "'";
 		for (int i = -2; i != WIDTH; ++i) std::cout << "-";
-//		std::cout << std::endl;
 		const std::vector<const char*> translation = {"TRUE", "FALSE", "NA"};
 		std::cout << " " << translation.at(state) << std::endl;
 	}

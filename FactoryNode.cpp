@@ -17,7 +17,7 @@ FactoryNode::FactoryNode(FactoryNode *parent, Node &node, const State& state):
 	if(hasParent()) {
         getParent()->addChild(this);
     }
-	if(getType() == INSTRUCTION) setConfirmed(true);
+	if(getType() == INSTRUCTION) setMatch(true);
 
     setStored(true);
     if (getType() != ATTRIBUTE) node.addListener(this);
@@ -32,7 +32,7 @@ FactoryNode::FactoryNode(FactoryNode *parent, const std::string &name,
     if(hasParent()) {
         getParent()->addChild(this);
     }
-    if(getType() == INSTRUCTION) setConfirmed(true);
+    if(getType() == INSTRUCTION) setMatch(true);
 	factoryCount++;
 }
 
@@ -77,12 +77,8 @@ id_type FactoryNode::getMaxID() const {
 		return getID();
 }
 
-bool FactoryNode::isConfirmed() const {
-	return confirmed;
-}
-
 bool FactoryNode::isConfirmedIndirectly() const {
-	if(isConfirmed()) {
+	if(isMatch()) {
 		return true;
 	}
 	else {
@@ -94,7 +90,7 @@ bool FactoryNode::isConfirmedIndirectly() const {
 }
 
 bool FactoryNode::isConfirmedFromParent() const {
-	return isConfirmed() || (hasParent() && getParent()->isConfirmedFromParent());
+	return isMatch() || (hasParent() && getParent()->isConfirmedFromParent());
 }
 
 bool FactoryNode::isStored() const {
@@ -119,10 +115,6 @@ bool FactoryNode::isClosedInParser() const {
 
 bool FactoryNode::hasSubElements() const {
 	return nSubElements != 0;
-}
-
-void FactoryNode::setConfirmed(const bool &YN) {
-	confirmed = YN;
 }
 
 void FactoryNode::setStored(const bool &YN) {
@@ -245,7 +237,7 @@ FactoryNode *FactoryNode::findByID(const id_type &id) const {
 void FactoryNode::print() const {
 	if (!hasParent()) std::printf(" stored-confirmed-open, 'x'=true '.'=false '-'=na\n");
 	const char * ENUM_STR = "-x.";
-    std::printf(" %c%c%c %s%s\n", stored?'x':'.', confirmed?'x':'.', ENUM_STR[parserState],
+    std::printf(" %c%c%c %s%s\n", stored?'x':'.', isMatch() ?'x':'.', ENUM_STR[parserState],
 				std::string(getDepth() * 2, ' ').c_str(), toString().c_str());
 	for(FactoryNode *subnode : getChildren()) subnode->print();
 
@@ -259,16 +251,11 @@ void FactoryNode::onNodeClosed() {
 	setParserState(CLOSED_IN_XML);
 }
 
-void FactoryNode::addListener(FactoryListener *l) {
-    FactoryAdapter::addListener(l);
-}
-
-void FactoryNode::removeListener(FactoryListener *l) {
-    FactoryAdapter::removeListener(l);
-}
-
-bool FactoryNode::hasListener(FactoryListener *l) {
-    return FactoryAdapter::hasListener(l);
+void FactoryNode::onNodeMatch() {
+	setMatch(true);
+	if(getType() == ATTRIBUTE && hasParent()) {
+		getParent()->setMatch(true);
+	}
 }
 
 void FactoryNode::notifyChangeInGroup() {
@@ -284,6 +271,9 @@ void FactoryNode::setRecusiveLink(bool recusiveLink) {
 bool FactoryNode::isRecusiveLink() {
 	return recusiveLink;
 }
+
+
+
 
 
 

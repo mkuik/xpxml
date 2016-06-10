@@ -59,7 +59,7 @@ public:
 	BinaryTree * getParent() const override;
 	BinaryTree * getLeft()const;
 	BinaryTree * getRight()const;
-	NodeScanner * getDataCollector();
+	NodeScanner * getScanner()const;
 	const XPathSyntaxType& getType() const;
 	const State& getState() const;
 	//std::list<Node*> getAllData() const;
@@ -67,7 +67,7 @@ public:
 	id_type getIndex() const;
 
 	void setIndex(const id_type&);
-	void setSource(NodeScanner *);
+	void setScanner(NodeScanner *);
 	void setType(const XPathSyntaxType&);
 
 	//void printStatus() const;

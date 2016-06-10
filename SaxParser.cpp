@@ -211,14 +211,14 @@ unsigned long SaxParser::getPosition() const {
 }
 
 void SaxParser::newElement(Node* node) {
-//	std::cout << "\nELE " << node->toString() << std::endl;
+	std::cout << "\nELE " << node->toString() << std::endl;
 	activated = node;
 	notifyNewElement(node);
 	notifyNewNode(node);
 }
 
 void SaxParser::endElement(Node* node) {
-//	std::cout << "\nEOF " << node->toString() << std::endl;
+	std::cout << "\nEOF " << node->toString() << std::endl;
 	activated = node;
 	node->setOpen(false);
 	notifyEndOfElement(node);
@@ -229,7 +229,7 @@ void SaxParser::endElement(Node* node) {
 }
 
 void SaxParser::newAttribute(Node* node) {
-//	std::cout << "\nATT " << node->toString() << std::endl;
+	std::cout << "\nATT " << node->toString() << std::endl;
 	activated = node;
 	notifyNewAttribute(node);
 	notifyNewNode(node);
@@ -240,7 +240,7 @@ void SaxParser::newAttribute(Node* node) {
 }
 
 void SaxParser::newComment(Node * node) {
-//	std::cout << "\nCOM " << node->toString() << std::endl;
+	std::cout << "\nCOM " << node->toString() << std::endl;
 	activated = node;
 	notifyComment(node);
 

@@ -22,11 +22,12 @@ public:
 private:
     State parserState = OPEN_IN_XML;
     State outputState = INIT;
-	bool confirmed = false;
+//	bool confirmed = false;
     bool stored = false;
 	bool sealedAttributes = false;
 	unsigned int nSubElements = 0;
 	static bool recusiveLink;
+
 public:
 	static id_type factoryCount;
     FactoryNode(FactoryNode *parent, Node &node, const State &state);
@@ -34,12 +35,10 @@ public:
                 const NodeType&, const State &state);
     virtual ~FactoryNode();
 	void addChild(FactoryNode *) override;
-    void setConfirmed(const bool&);
     void setStored(const bool&);
     void setParserState(const State&);
     void setOutputState(const State&);
     id_type getMaxID() const;
-	bool isConfirmed() const;
     bool isConfirmedIndirectly() const;
     bool isConfirmedFromParent() const;
     bool isStored() const;
@@ -53,9 +52,7 @@ public:
     void print() const;
     virtual void onNodeDestruct() override;
 	virtual void onNodeClosed() override;
-    virtual void addListener(FactoryListener *l) override;
-    virtual void removeListener(FactoryListener *l) override;
-    virtual bool hasListener(FactoryListener *l) override;
+	virtual void onNodeMatch() override;
 	virtual void removeChild(FactoryNode *c) override;
 	virtual void setParent(Node *node) override;
 	void notifyChangeInGroup();

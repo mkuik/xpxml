@@ -29,6 +29,7 @@ class Node :
     std::string xml_namespace;
     unsigned short link = 0;
     bool open = true;
+	bool match = false;
 public:
     static id_type nodeCount;
 
@@ -57,8 +58,6 @@ public:
 
     virtual std::string toString() const override;
 
-    virtual void addListener(NodeListener *l) override;
-
     void notifyLink();
 
     void notifyUnlink();
@@ -68,6 +67,10 @@ public:
     bool isOpen() const;
 
     void setOpen(bool open);
+
+	bool isMatch() const;
+
+	void setMatch(bool match);
 };
 
 

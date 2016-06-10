@@ -11,11 +11,13 @@
 struct NodeListener {
     virtual void onNodeClosed() {};
     virtual void onNodeDestruct() {};
+	virtual void onNodeMatch() {};
 };
 
 struct NodeAdapter : public Adapter<NodeListener> {
     void notifyNodeClosed();
     void notifyNodeDestruct();
+	void notifyNodeMatch();
 };
 
 

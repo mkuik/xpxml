@@ -31,3 +31,18 @@ void NodeAdapter::notifyNodeDestruct() {
     stop();
 }
 
+void NodeAdapter::notifyNodeMatch() {
+	if(Globals::DESTRUCTING) return;
+	start();
+	for(auto it = listeners.begin(); it != listeners.end();) {
+		activated = *it;
+		activated->onNodeMatch();
+		if(remove == activated) {
+			it = listeners.erase(it);
+			remove = 0;
+		}
+		else ++it;
+	}
+	stop();
+}
+

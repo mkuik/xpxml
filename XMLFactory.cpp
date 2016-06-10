@@ -6,9 +6,7 @@
 #include "Globals.h"
 
 XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath) {
-	factory = new FactoryNode(0, "root", "", VIRTUAL, FactoryNode::INIT);
-	factoryRoot = factory;
-    factory->setName("");
+	factoryRoot = factory = new FactoryNode(0, "root", "", VIRTUAL, FactoryNode::INIT);
 }
 
 XMLFactory::~XMLFactory() {
@@ -37,40 +35,21 @@ size_t XMLFactory::size() const {
     return factoryRoot->getTypeCount();
 }
 
-// 4
-// XPath evaluation result
-void XMLFactory::onNewXPathMatch(Node *node) {
-	Factory::onNewXPathMatch(node);
-	if(Node *realNode = node->getNonVirtualParent()) {
-		if(FactoryNode *sector = factoryRoot->findByID(realNode->getID())) {
-			sector->setConfirmed(true);
-			if(sector->getType() == ATTRIBUTE && sector->hasParent()) {
-				sector->getParent()->setConfirmed(true);
-			}
-		}
-	}
-}
-
 // 1a
 // The parser created a new element
 void XMLFactory::onNewElement(Node *node) {
 	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::OPEN_IN_XML);
-	fNode->addListener(this);
+	fNode->FactoryAdapter::addListener(this);
 	factory = fNode;
 
 	emptyTrash();
-}
-
-
-void XMLFactory::onNewComment(Node *node) {
-    SaxParserListener::onNewComment(node);
 }
 
 // 1b
 // The parser created a new attribute
 void XMLFactory::onNewAttribute(Node *node) {
 	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::CLOSED_IN_XML);
-	fNode->addListener(this);
+	fNode->FactoryAdapter::addListener(this);
 }
 
 // 5

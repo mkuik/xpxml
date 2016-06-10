@@ -18,7 +18,6 @@ class XMLFactory : public Factory,
         public FactoryListener,
 		public SecureTrashBin<FactoryNode> {
 	FactoryNode *factory, *factoryRoot;
-	const bool DEBUG = true;
 	id_type nNew = 0, nDelete = 0;
 public:
 	XMLFactory(const std::string&);
@@ -27,8 +26,6 @@ public:
 	void cleanup();
 	size_t size() const override;
 private:
-	virtual void onNewComment(Node *node) override;
-	void onNewXPathMatch(Node *) override;
 	void onNewNode(Node *) override;
 	void onNewElement(Node *) override;
 	void onEndOfElement(Node *) override;

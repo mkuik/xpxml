@@ -80,10 +80,6 @@ std::string Node::getPath() const {
     return path.str();
 }
 
-void Node::addListener(NodeListener *l) {
-    Adapter::addListener(l);
-}
-
 unsigned short Node::getLink() const {
     return link;
 }
@@ -102,7 +98,24 @@ bool Node::isOpen() const {
 
 void Node::setOpen(bool open) {
     Node::open = open;
-    notifyNodeClosed();
+    if (!open) {
+        std::printf("close %s\n", toString().data());
+        notifyNodeClosed();
+    }
+}
+
+bool Node::isMatch() const {
+	return match;
+}
+
+void Node::setMatch(bool match) {
+	Node::match = match;
+	if(match) notifyNodeMatch();
+    if (getType() == VIRTUAL) {
+        if(Node * node = getNonVirtualParent()) {
+            node->setMatch(true);
+        }
+    }
 }
 
 

@@ -73,8 +73,6 @@ XPathScanner::XPathScanner(const std::string& xpath_string) : Name("xpath scanne
 
 	blueprint = new BinaryTree(0, xpath.begin(), xpath.end());
 	locators = blueprint->getLocators();
-//    blueprint->printStructure();
-//    std::cout << std::endl;
 
 	for (std::list<NodeScanner *>::iterator subject = locators.begin();
 			subject != locators.end(); ++subject) {
@@ -91,21 +89,19 @@ XPathScanner::XPathScanner(const std::string& xpath_string) : Name("xpath scanne
 		}
 	}
 
-
     mergeIdenticalLocators(blueprint, locators);
 	addTree(new BinaryTree(*blueprint, 0));
-
 }
 
 void mergeIdenticalLocators(BinaryTree *branch,
                             const std::list<NodeScanner *> &array) {
-	NodeScanner * allocated = branch->getDataCollector();
+	NodeScanner * allocated = branch->getScanner();
 	if  (allocated) {
 		for (NodeScanner *query : array) {
 			if (query && allocated != query
 				&& allocated->isWildcard() == query->isWildcard()
 				&& allocated->compareDirectory(query)) {
-				branch->setSource(query);
+				branch->setScanner(query);
 				merge(query, allocated);
 				break;
 			}
@@ -147,20 +143,17 @@ XPathScanner::~XPathScanner() {
 
 void XPathScanner::onAllocatedToBranch(Directory * source, Node* ) {
 	BinaryTree * tree = static_cast<BinaryTree *>(source->getTopParent());
-//	std::printf("ALLOCATED TO BRANCH\n");
-//	tree->printStructure();
-	
+
+	tree->printStructure();
+
 	if (activated == 0) activated = tree;
 	if (tree->iscomplete()) return;
     Node * data = tree->test();
 
-    if(data) notifyNewMatch(data);
-	
-
-//	std::printf("CASES IN MEMORY\n");
-//	for (BinaryTree * tree : cases) {
-//		tree->printStructure();
-//	}
+    if(data) {
+		data->setMatch(true);
+		notifyNewMatch(data);
+	}
 
 	emptyTrash(activated);
 }
@@ -169,14 +162,11 @@ void XPathScanner::onRedirectedFromBranch(Directory * source, Node* node) {
     BinaryTree *activatedBrach = static_cast<BinaryTree *>(source);
 	activated = static_cast<BinaryTree *>(source->getTopParent());
     activated->deactivateFilledBranches();
-    BinaryTree *newTree = new BinaryTree(*activated, 0, activatedBrach->getDataCollector()->getID(), node);
-    
+    BinaryTree *newTree = new BinaryTree(*activated, 0, activatedBrach->getScanner()->getID(), node);
 	removeUnusedCases();
-	
 	addTree(newTree);
 	onAllocatedToBranch(newTree, node);
 	activated = 0;
-	//std::printf("NODE REDIRECTED\n");
 }
 
 void XPathScanner::addTree(BinaryTree *tree) {
@@ -191,8 +181,6 @@ void XPathScanner::removeUnusedCases() {
 		if(tree->iscomplete()) {
 			it = cases.erase(it);
 			addToTrash(tree);
-//			std::printf("TO TRASH\n");
-//			tree->printStructure();
 		}
 		else {
 			++it;
@@ -203,9 +191,9 @@ void XPathScanner::removeUnusedCases() {
 void XPathScanner::removeFromTrash(BinaryTree *tree) {
     SecureTrashBin::removeFromTrash(tree);
 	cases.remove(tree);
-	//std::printf("DELETE TREE\n");
-	//tree->printStructure();
 	notifyRemoveTree(tree);
+	std::printf("REMOVE\n");
+	tree->printStructure();
     delete tree;
 }
 
