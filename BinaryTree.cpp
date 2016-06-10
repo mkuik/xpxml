@@ -287,8 +287,6 @@ void BinaryTree::onNodeClosed() {
 void BinaryTree::setNode(Node *node) {
 	SharedNodeContainer::setNode(node);
 	node->addListener(this);
-//	std::printf("LINK %s\n", node->toString().data());
-//	printStructure();
 }
 
 
