@@ -27,12 +27,12 @@ void NodeScanner::setName(const std::string& n) {
 
 void NodeScanner::onNewNode(Node *node) {
 //	std::cout << std::endl;
-	if (node && compareDirectory(node)) {
+	if (node && cmpDir(node)) {
 		notifyFoundNode(node);
 	}
 }
 
-bool NodeScanner::compareDirectory(Node *query, const NodeScanner *source) const {
+bool NodeScanner::cmpDir(Node *query, const NodeScanner *source) const {
 
 	if (!query) {
 		return false;
@@ -42,14 +42,14 @@ bool NodeScanner::compareDirectory(Node *query, const NodeScanner *source) const
 				return true;
 			case EDGE_ANCESTOR:
 			case EDGE_DIRECT:
-				return !hasParent() || getParent()->compareDirectory(query->getParent(), this);
+				return !hasParent() || getParent()->cmpDir(query->getParent(), this);
 		}
 	} else if (source) {
 		switch (source->getConnectionType()) {
 			case EDGE_ROOT:
 				return false;
 			case EDGE_ANCESTOR:
-				return compareDirectory(query->getParent(), source);
+				return cmpDir(query->getParent(), source);
 			case EDGE_DIRECT:
 				return false;
 		}
@@ -101,4 +101,12 @@ void NodeScanner::removeListener(NodeScannerListener *l) {
 
 bool NodeScanner::hasListener(NodeScannerListener *l) {
     return NodeScannerAdapter::hasListener(l);
+}
+
+void merge(NodeScanner *keep, NodeScanner *remove) {
+	for(NodeScanner * child : remove->getChildren()) child->setParent(keep);
+	if(remove->hasParent()) {
+		remove->getParent()->removeChild(remove);
+		remove->getParent()->addChild(keep);
+	}
 }

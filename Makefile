@@ -4,7 +4,7 @@ CFLAGS=-std=c++11
 LDFLAGS=
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=xpxml2
+EXECUTABLE=xpxml
 
 all: $(SOURCES) $(EXECUTABLE)
     

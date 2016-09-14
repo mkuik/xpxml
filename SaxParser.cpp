@@ -192,8 +192,8 @@ int SaxParser::parse(const char * filename) {
 			break;
 		}
 	}
-
 	file.close();
+	notifyEndOfFile();
 	return 0;
 }
 

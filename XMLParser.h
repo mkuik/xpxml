@@ -14,7 +14,7 @@ class XMLParser: public SaxParserListener, public WriteInput, public FactoryList
 public:
 	enum Method { GET_VALUES, TO_XML };
 private:
-    SaxParser * parser = 0;
+    SaxParser * const parser;
     Factory * factory = 0;
     std::ostream& output;
     id_type maxID = 0;
@@ -29,6 +29,7 @@ public:
     void setNodeIDLimit(const id_type&);
     virtual void onEndOfElement(Node *) override;
 	virtual void onNewNode(Node *) override;
+	virtual void onEndOfFile() override;
 	virtual void writeResult(std::stringstream&) override;
 	double getProgress() const;
 	time_t getMilliCount() const;

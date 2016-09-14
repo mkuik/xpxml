@@ -7,44 +7,13 @@
 
 #include "Factory.h"
 #include "Globals.h"
+#include "Xpath.h"
 #include <sstream>
 #include <string>
 
 Factory::Factory(const std::string &xpath) : Name("factory") {
-
-
-    std::vector<std::string> xpath_split_by_unison{""};
-    short scope = 0;
-    for (char c : xpath) {
-        switch (c) {
-            case '(':
-            case '[':
-                ++scope;
-                xpath_split_by_unison.back() += c;
-                break;
-            case ')':
-            case ']':
-                --scope;
-                xpath_split_by_unison.back() += c;
-                break;
-            case '|':
-                if (scope == 0)
-                    xpath_split_by_unison.push_back("");
-                else
-                    throw "unison found within scope of brackets";
-                break;
-            case ' ':
-                if (!xpath_split_by_unison.back().empty())
-                    xpath_split_by_unison.back() += c;
-                break;
-            default:
-                xpath_split_by_unison.back() += c;
-                break;
-        }
-    }
-
-    for (std::string xpath_location : xpath_split_by_unison) {
-        XPathScanner *path = new XPathScanner(xpath_location);
+    for (const Xpath& x : XPathCollection(xpath)) {
+        XPathScanner *path = new XPathScanner(x);
         path->addListener(this);
         structures.push_back(path);
     }
@@ -54,7 +23,6 @@ Factory::~Factory() {
     Globals::DESTRUCTING = true;
     deleteXPathScanners();
 }
-
 
 
 void Factory::setAdapter(SaxParserAdapter *parser) {
@@ -82,6 +50,12 @@ size_t Factory::getXPathScannerSize() const {
 
 double Factory::getEfficiency() const {
     return 1;
+}
+
+std::string Factory::toString() const {
+	std::stringstream s;
+	s << getEfficiency() << "%";
+	return s.str();
 }
 
 void Factory::onNewXPathMatch(Node *node) {

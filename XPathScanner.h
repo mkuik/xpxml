@@ -13,6 +13,7 @@
 #include "BinaryTree.h"
 #include <vector>
 #include <list>
+#include <set>
 
 #include "SecureTrashBin.h"
 #include "BinaryTreeAdapter.h"
@@ -20,15 +21,14 @@
 
 class XPathScanner : public BinaryTreeListener,
 					 public XPathScannerAdapter,
-					 public SecureTrashBin<BinaryTree>,
-					 public Name {
-	std::vector<std::string> xpath;
+					 public SecureTrashBin<BinaryTree> {
+	const Xpath xpath;
+	BinaryTree * blueprint;
 	std::list<BinaryTree *> cases;
-	std::list<NodeScanner*> locators;
-	BinaryTree * blueprint = 0;
+	SaxParserAdapter * parser = 0;
 	BinaryTree * activated = 0;
 public:
-	XPathScanner(const std::string&);
+	XPathScanner(const Xpath&);
 	~XPathScanner();
 	void onAllocatedToBranch(Directory *, Node*);
 	void onRedirectedFromBranch(Directory *, Node*);
@@ -37,10 +37,6 @@ public:
 	void setAdapter(SaxParserAdapter *);
 	size_t getSize() const;
 	void removeUnusedCases();
-private:
-	void newAlpha(const char&);
-	void newIndicator(const char&);
-	void newSpace();
 };
 
 #endif /* PATHFILTER_H_ */

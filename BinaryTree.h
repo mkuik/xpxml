@@ -12,11 +12,12 @@
 #include "NodeScanner.h"
 #include <vector>
 #include <list>
+#include <set>
 #include "XPathSyntaxTypes.h"
 #include "BinaryTreeAdapter.h"
-#include "SharedNodeContainer.h"
+#include "Xpath.h"
 
-class BinaryTree : public SharedNodeContainer,
+class BinaryTree :
 		public Directory,
 		public ID,
 		public NodeScannerListener,
@@ -33,17 +34,19 @@ private:
 	NodeScanner * source = 0;
 	XPathSyntaxType type = NODE;
 	id_type index = 1;
+	Node * data = 0;
 public:
-	virtual void setNode(Node *node) override;
-
-	BinaryTree(BinaryTree *, std::vector<std::string>::iterator,
-			std::vector<std::string>::iterator);
+	BinaryTree(BinaryTree *, const Xpath&);
 	BinaryTree(const BinaryTree &, BinaryTree *);
 	BinaryTree(const BinaryTree &, BinaryTree *, const id_type&, Node*);
 	~BinaryTree();
 
+	void optimize();
+	void replaceDataScources(const std::set<NodeScanner *> &);
 
-	virtual void removeNode() override;
+	void setData(Node*);
+	Node * getData() const;
+	void removeData();
 
 	Node *test(BinaryTree * = 0);
 	void setFalseState();
@@ -59,25 +62,24 @@ public:
 	BinaryTree * getParent() const override;
 	BinaryTree * getLeft()const;
 	BinaryTree * getRight()const;
-	NodeScanner * getDataCollector();
+	NodeScanner * getDataSource() const;
+	std::set<NodeScanner *> getDataSources() const;
 	const XPathSyntaxType& getType() const;
 	const State& getState() const;
-	//std::list<Node*> getAllData() const;
-	std::list<NodeScanner *> getLocators() const;
 	id_type getIndex() const;
 
 	void setIndex(const id_type&);
 	void setSource(NodeScanner *);
 	void setType(const XPathSyntaxType&);
 
-	//void printStatus() const;
 	void printStructure() const;
 
-	void deactivateFilledBranches();
-	void deactivateAll();
+	void stopDataContainingBranchesFromRecievingData();
+	void stopSubBranchesFromRecievingData();
 
 	void addListener(BinaryTreeListener*) override;
 	void removeListener(BinaryTreeListener*) override;
 };
+
 
 #endif /* FILTERINTERPRETER_H_ */

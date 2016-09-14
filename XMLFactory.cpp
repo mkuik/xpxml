@@ -5,17 +5,14 @@
 #include "XMLFactory.h"
 #include "Globals.h"
 
-XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath) {
-	factory = new FactoryNode(0, "root", "", VIRTUAL, FactoryNode::INIT);
-	factoryRoot = factory;
-    factory->setName("");
+XMLFactory::XMLFactory(const std::string &xpath): Factory(xpath), 
+root(new FactoryNode(0, "root", "", VIRTUAL, FactoryNode::INIT)) {
+	dir = root;
 }
 
 XMLFactory::~XMLFactory() {
-	deleteXPathScanners();
-	cleanup();
 	FactoryNode::setRecusiveLink(true);
-	delete factoryRoot;
+	delete root;
 }
 
 void XMLFactory::setAdapter(SaxParserAdapter *parser) {
@@ -25,8 +22,8 @@ void XMLFactory::setAdapter(SaxParserAdapter *parser) {
 
 void XMLFactory::cleanup() {
     std::stringstream stream;
-    factoryRoot->flushXML(stream, factoryRoot->getMaxID());
-    factoryRoot->close(stream);
+    root->flushXML(stream, root->getMaxID());
+    root->close(stream);
     moveStream(stream);
     for(XPathScanner *collector : structures)
         collector->emptyTrash();
@@ -34,7 +31,7 @@ void XMLFactory::cleanup() {
 }
 
 size_t XMLFactory::size() const {
-    return factoryRoot->getTypeCount();
+    return root->getTypeCount();
 }
 
 // 4
@@ -42,7 +39,7 @@ size_t XMLFactory::size() const {
 void XMLFactory::onNewXPathMatch(Node *node) {
 	Factory::onNewXPathMatch(node);
 	if(Node *realNode = node->getNonVirtualParent()) {
-		if(FactoryNode *sector = factoryRoot->findByID(realNode->getID())) {
+		if(FactoryNode *sector = root->findByID(realNode->getID())) {
 			sector->setConfirmed(true);
 			if(sector->getType() == ATTRIBUTE && sector->hasParent()) {
 				sector->getParent()->setConfirmed(true);
@@ -54,10 +51,9 @@ void XMLFactory::onNewXPathMatch(Node *node) {
 // 1a
 // The parser created a new element
 void XMLFactory::onNewElement(Node *node) {
-	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::OPEN_IN_XML);
+	FactoryNode *fNode = new FactoryNode(dir, *node, FactoryNode::OPEN_IN_XML);
 	fNode->addListener(this);
-	factory = fNode;
-
+	dir = fNode;
 	emptyTrash();
 }
 
@@ -69,30 +65,29 @@ void XMLFactory::onNewComment(Node *node) {
 // 1b
 // The parser created a new attribute
 void XMLFactory::onNewAttribute(Node *node) {
-	FactoryNode *fNode = new FactoryNode(factory, *node, FactoryNode::CLOSED_IN_XML);
+	FactoryNode *fNode = new FactoryNode(dir, *node, FactoryNode::CLOSED_IN_XML);
 	fNode->addListener(this);
+}
+
+void XMLFactory::onEndOfFile() {
+	deleteXPathScanners();
+	cleanup();
 }
 
 // 5
 // The parser closed an element
 void XMLFactory::onEndOfElement(Node *node) {
-	factory = factory->getParent();
-}
-
-// An XMLFactoryNode was used as output
-void XMLFactory::stateChanged(FactoryNode * sector) {
-	if (sector->getType() == ELEMENT && sector->isClosedInParser() && !sector->isStored()) {
-		for (FactoryNode * child : sector->getChildren()) {
-			stateChanged(child);
-		}
-		addToTrash(sector);
-	} else if (sector->getType() == ATTRIBUTE && sector->hasParent() && !sector->getParent()->isStored()) {
-		addToTrash(sector);
-	}
+	dir = dir->getParent();
 }
 
 double XMLFactory::getEfficiency() const {
 	return nDelete / (double)nNew;
+}
+
+std::string XMLFactory::toString() const {
+	std::stringstream s;
+	s << nDelete << "/" << nNew << "=" << (int)(getEfficiency() * 100 + 0.5) << "%";
+	return s.str();
 }
 
 void XMLFactory::onNewNode(Node *node) {
@@ -101,7 +96,7 @@ void XMLFactory::onNewNode(Node *node) {
 
 void XMLFactory::removeFromTrash(FactoryNode * node) {
 	SecureTrashBin::removeFromTrash(node);
-	delete node;
+	delete node; 
 }
 
 void XMLFactory::onFactoryNodeDeleted(void *source, id_type id) {
@@ -111,7 +106,7 @@ void XMLFactory::onFactoryNodeDeleted(void *source, id_type id) {
 void XMLFactory::onFactoryNodeClosedInParser(void *source, id_type id) {
 	id_type maxID = static_cast<FactoryNode*>(source)->getMaxID();
 	std::stringstream stream;
-	factoryRoot->flushXML(stream, maxID);
+	root->flushXML(stream, maxID);
 	moveStream(stream);
 }
 
@@ -123,7 +118,18 @@ void XMLFactory::onFactoryNodeSourceDeleted(void *source, id_type id) {
 	stateChanged(static_cast<FactoryNode*>(source));
 }
 
-
+// An XMLFactoryNode was used as output
+void XMLFactory::stateChanged(FactoryNode * sector) {
+	if(sector->getType() == ELEMENT && sector->isClosedInParser() && !sector->isStored()) {
+		for(FactoryNode * child : sector->getChildren()) {
+			stateChanged(child);
+		}
+		addToTrash(sector);
+	}
+	else if(sector->getType() == ATTRIBUTE && sector->hasParent() && !sector->getParent()->isStored()) {
+		addToTrash(sector);
+	}
+}
 
 
 

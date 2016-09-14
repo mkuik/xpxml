@@ -27,7 +27,7 @@ public:
 	virtual size_t size() const = 0;
 	size_t getXPathScannerSize() const;
 	virtual double getEfficiency() const;
-
+	virtual std::string toString() const;
 	virtual void onNewXPathMatch(Node *node) override;
 };
 

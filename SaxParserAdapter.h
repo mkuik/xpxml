@@ -19,6 +19,7 @@ public:
 	virtual void onNewAttribute(Node *node) {}
 	virtual void onNewNode(Node *node) {}
 	virtual void onNewComment(Node *node) {}
+	virtual void onEndOfFile() {}
 };
 
 class SaxParserAdapter : public Adapter<SaxParserListener> {
@@ -28,6 +29,7 @@ public:
 	void notifyNewAttribute(Node * node);
 	void notifyEndOfElement(Node * node);
 	void notifyComment(Node * node);
+	void notifyEndOfFile();
 };
 
 #endif /* SAXPARSEREVENTS_H_ */

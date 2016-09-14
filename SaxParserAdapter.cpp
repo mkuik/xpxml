@@ -68,3 +68,16 @@ void SaxParserAdapter::notifyComment(Node * node) {
     }
     stop();
 }
+
+void SaxParserAdapter::notifyEndOfFile() {
+	start();
+	for(auto it = listeners.begin(); it != listeners.end();) {
+		activated = *it;
+		activated->onEndOfFile();
+		if(remove != 0) {
+			it = listeners.erase(it);
+		}
+		else ++it;
+	}
+	stop();
+}

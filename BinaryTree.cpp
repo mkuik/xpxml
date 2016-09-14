@@ -6,26 +6,26 @@
  */
 
 #include "BinaryTree.h"
-#include "tools.h"
 #include "XPathCommandDeconstructor.h"
+#include "convert.h"
 #include <string>
 
-BinaryTree::BinaryTree(BinaryTree * ben, std::vector<std::string>::iterator begin,
-		std::vector<std::string>::iterator end) :
+// BinaryTree constuctor from Xpath object
+BinaryTree::BinaryTree(BinaryTree * ben, const Xpath& xpath) :
 		Directory(ben) {
 
 	setParent(ben);
-	XPathCommandDeconstructor factory = XPathCommandDeconstructor(begin, end);
+	XPathCommandDeconstructor factory = XPathCommandDeconstructor(xpath);
     while (factory.getSyntaxType() == CONTAINER && factory.hasLeft()) {
-        factory = XPathCommandDeconstructor(factory.getLeftBegin(), factory.getLeftEnd());
+        factory = XPathCommandDeconstructor(factory.getLeft());
     }
 	Directory::setName(factory.getName());
 	type = factory.getSyntaxType();
 
 	if (type == NODE) {
 		BinaryTree *p = ben;
-		while (p && p->getDataCollector() == 0) p = p->getParent();
-		NodeScanner * parent = p ? p->getDataCollector() : 0;
+		while (p && p->getDataSource() == 0) p = p->getParent();
+		NodeScanner * parent = p ? p->getDataSource() : 0;
 		source = new NodeScanner(parent, factory.getNodeType(), factory.getNodePathLink());
 		source->setName(Directory::getName());
 	} else if (type == VALUE) {
@@ -34,19 +34,16 @@ BinaryTree::BinaryTree(BinaryTree * ben, std::vector<std::string>::iterator begi
 		}
 		else {
 			Node *value = new Node("VALUE", Directory::getName(), 0, VIRTUAL);
-			setNode(value);
+			setData(value);
 		}
 	}
 
-	if(factory.hasLeft()) {
-		left = new BinaryTree(this, factory.getLeftBegin(), factory.getLeftEnd());
-	}
-	if(factory.hasRight()) {
-		right = new BinaryTree(this, factory.getRightBegin(), factory.getRightEnd());
-	}
+	if(factory.hasLeft()) left = new BinaryTree(this, factory.getLeft());
+	if(factory.hasRight()) right = new BinaryTree(this, factory.getRight());
     
 }
 
+// BinaryTree copy constuctor. Does not copy allocated data
 BinaryTree::BinaryTree(const BinaryTree & obj, BinaryTree * p) :
 		Directory(obj) {
 
@@ -59,10 +56,13 @@ BinaryTree::BinaryTree(const BinaryTree & obj, BinaryTree * p) :
 	}
 	if (obj.left) left = new BinaryTree(*(obj.left), this);
 	if (obj.right) right = new BinaryTree(*(obj.right), this);
-	if (type == VALUE) setNode(obj.getNode());
+	if (type == VALUE) setData(obj.getData());
 
 }
 
+// BinaryTree copy constructor. Also copy's allocated data. When the target 
+// branch is reached the allocated data is replaced with 'node'. All connected
+// branches to the target do not copy allocated data.
 BinaryTree::BinaryTree(const BinaryTree & obj, BinaryTree * p, const id_type& target, Node * node) :
 		Directory(obj) {
 	setParent(p);
@@ -74,29 +74,60 @@ BinaryTree::BinaryTree(const BinaryTree & obj, BinaryTree * p, const id_type& ta
 	}
 
 	if (getID() == target || (source && source->getID() == target)) {
-		setNode(node);
+		setData(node);
 		setIndex(obj.getIndex() + 1);
 		if (obj.left) left = new BinaryTree(*(obj.left), this);
 		if (obj.right) right = new BinaryTree(*(obj.right), this);
 	} else {
-		if (obj.getNode()) setNode(obj.getNode());
+		if (obj.getData()) setData(obj.getData());
 		if (obj.left) left = new BinaryTree(*(obj.left), this, target, node);
 		if (obj.right) right = new BinaryTree(*(obj.right), this, target, node);
 	}
 
-	if (type == VALUE) setNode(obj.getNode());
+	if (type == VALUE) setData(obj.getData());
 }
 
+// BinaryTree deconstructor
 BinaryTree::~BinaryTree() {
 
 	if (source) source->removeListener(this);
 	if (left) delete left;
 	if (right) delete right;
 
-	removeNode();
+	removeData();
 }
 
+void BinaryTree::optimize() {
+	auto locators = getDataSources();
+	for(auto A = locators.begin(); A != locators.end(); ++A) {
+		for(auto B = locators.begin(); B != locators.end();) {
+			if(B != A && (*B)->isWildcard() == (*A)->isWildcard() && (*B)->cmpDir(*A))
+				B = locators.erase(B);
+			else ++B;
+		}
+	}
+	replaceDataScources(locators);
+}
 
+void BinaryTree::replaceDataScources(const std::set<NodeScanner *> &array) {
+	NodeScanner * allocated = getDataSource();
+	if(getDataSource()) {
+		for(NodeScanner *query : array) {
+			if(query && allocated != query
+				&& allocated->isWildcard() == query->isWildcard()
+				&& allocated->cmpDir(query)) {
+				setSource(query);
+				merge(query, allocated);
+				break;
+			}
+		}
+	}
+	if(getRight()) getRight()->replaceDataScources(array);
+	if(getLeft()) getLeft()->replaceDataScources(array);
+}
+
+// Compare two strings. If both strings represent numerals then the are 
+// compared as such.
 int compare(const std::string& A, const std::string& B) {
 //	std::printf("compare('%s', '%s')\n", A.c_str(), B.c_str());
 	try {
@@ -114,6 +145,7 @@ int compare(const std::string& A, const std::string& B) {
 	}
 }
 
+// Evaluate the allocated data to the xpath conditions
 Node *BinaryTree::test(BinaryTree *memory) {
 	if (getState() == FALSE) return 0;
 
@@ -200,7 +232,7 @@ Node *BinaryTree::test(BinaryTree *memory) {
 				C = (A ? A : B);
 			break;
 		case NODE:
-			if (getNode()) {
+			if (getData()) {
 				if (left && right) {
 					if ((B = right->test(this)) && (A = left->test(this))) {
 						C = A;
@@ -216,20 +248,20 @@ Node *BinaryTree::test(BinaryTree *memory) {
 					}
 				}
 				else {
-					C = getNode();
+					C = getData();
 				}
 			}
 			break;
 		case VALUE:
-			if (getNode()) {
-				C = getNode();
+			if (getData()) {
+				C = getData();
 			}
 			break;
 		case INDEX:
 			if(memory) {
-				if(memory->getNode()) {
+				if(memory->getData()) {
 					if(memory->getIndex() == convert<id_type>(Directory::getName())) {
-						C = memory->getNode();
+						C = memory->getData();
 					}
 					else {
 						setFalseState();
@@ -241,23 +273,23 @@ Node *BinaryTree::test(BinaryTree *memory) {
 			}
 			break;
 		case FUNC_TEXT:
-			C = memory->getNode();
+			C = memory->getData();
 			break;
 		case FUNC_STRING_LENGTH:
-			if (!getNode() && memory->getNode()) {
+			if (!getData() && memory->getData()) {
 				std::stringstream value;
-				value << memory->getNode()->getValue().length();
-				setNode(new Node("length(" + memory->getNode()->getValue() + ")", value.str(), memory->getNode()));
+				value << memory->getData()->getValue().length();
+				setData(new Node("length(" + memory->getData()->getValue() + ")", value.str(), memory->getData()));
 			}
-			C = getNode();
+			C = getData();
 			break;
 		case FUNC_INDEX:
-			if (!getNode() && memory->getNode()) {
+			if (!getData() && memory->getData()) {
 				std::stringstream value;
 				value << memory->getIndex();
-				setNode(new Node("position(" + memory->getName() + ")", value.str(), memory->getNode()));
+				setData(new Node("position(" + memory->getName() + ")", value.str(), memory->getData()));
 			}
-			C = getNode();
+			C = getData();
 			break;
 		case UNION:
 			break;
@@ -270,34 +302,45 @@ Node *BinaryTree::test(BinaryTree *memory) {
 	return C;
 }
 
-// Extract the value from node (if conditions from listeners are true)
+// Allocate data recieved from NodeScanner. If the branch already has allocated
+// data or the data can't not be a member then the new data is redirected to 
+// the BinaryTree container XPathScanner
 void BinaryTree::onFoundNode(Node *node) {
-	if (getNode() == 0 && ismember(node)) {
-		setNode(node);
+	if (getData() == 0 && ismember(node)) {
+		setData(node);
 		notifyAllocation(this, node);
 	} else {
 		notifyRedirect(this, node);
+		stopSubBranchesFromRecievingData();
 	}
 }
 
+// If the sax parser closes the allocated element while sub branches are 
+// missing data, then the branch sub section does not match the xpath
 void BinaryTree::onNodeClosed() {
 	if (!isfilled()) setFalseState();
 }
 
-void BinaryTree::setNode(Node *node) {
-	SharedNodeContainer::setNode(node);
-	node->addListener(this);
+// Allocate data to branch and a listener to the data. The data will notify the
+// branch when the node is closed in case of an element.
+void BinaryTree::setData(Node *node) {
+	if(node) {
+		data = node;
+		data->notifyLink();
+		data->addListener(this);
+	}
 }
 
-
+// Check if all sub branches have allocated data where needed
 bool BinaryTree::isfilled() const {
-	return !(getType() == NODE && getNode() == 0 || getLeft() && !getLeft()->isfilled() || getRight() && !getRight()->isfilled());
+	return !(getType() == NODE && getData() == 0 || getLeft() && !getLeft()->isfilled() || getRight() && !getRight()->isfilled());
 }
 
+// Check if a data candidate is a subnode of previously allocated data
 bool BinaryTree::ismember(Node * node) const {
 	if (type == NODE) {
-		if (getNode()) {
-			return getNode()->getID() == node->getID();
+		if (getData()) {
+			return getData()->getID() == node->getID();
 		} else if (hasParent() && source
 				&& source->getConnectionType() == NodeScanner::EDGE_ANCESTOR) {
 			for (Node * x = node->getParent(); x; x = x->getParent()) {
@@ -313,34 +356,46 @@ bool BinaryTree::ismember(Node * node) const {
 		return hasParent() && getParent()->ismember(node);
 }
 
-std::list<NodeScanner *> BinaryTree::getLocators() const {
-	std::list<NodeScanner *> list;
-	if (source) list.push_back(source);
-	if (left) list.merge(left->getLocators());
-	if (right) list.merge(right->getLocators());
+// Collect all NodeScanners connected to subbranches
+std::set<NodeScanner *> BinaryTree::getDataSources() const {
+	std::set<NodeScanner *> list;
+	if (source) list.insert(source);
+	if(left) {
+		auto l = left->getDataSources();
+		list.insert(l.begin(), l.end());
+	}
+	if(right) {
+		auto l = right->getDataSources();
+		list.insert(l.begin(), l.end());
+	}
 	return list;
 }
 
+// Get left branch
 BinaryTree * BinaryTree::getLeft()const {
 	return left;
 }
 
+// Get right branch
 BinaryTree * BinaryTree::getRight()const {
 	return right;
 }
 
+// Add a listener to it's self and it's subbranches
 void BinaryTree::addListener(BinaryTreeListener * listener) {
 	BinaryTreeAdapter::addListener(listener);
 	if (left) left->addListener(listener);
 	if (right) right->addListener(listener);
 }
 
+// Remove a listener from it's self and it's subbranches
 void BinaryTree::removeListener(BinaryTreeListener * listener) {
 	BinaryTreeAdapter::removeListener(listener);
 	if (right) right->removeListener(listener);
 	if (left) left->removeListener(listener);
 }
 
+// Check wether a conclusion has been drawn by the test function
 bool BinaryTree::iscomplete() const {
 	switch (state) {
 	case TRUE:
@@ -352,6 +407,7 @@ bool BinaryTree::iscomplete() const {
 	}
 }
 
+// Mark a branch section as false and reevaluate it's parent banch
 void BinaryTree::setFalseState() {
 	switch (type) {
 		default:
@@ -381,50 +437,66 @@ void BinaryTree::setFalseState() {
 
 }
 
+// Get parent branch
 BinaryTree *BinaryTree::getParent() const {
 	return static_cast<BinaryTree *>(Directory::getParent());
 }
 
+// Get the type of syntax th branch represents from xpath
 const XPathSyntaxType&BinaryTree::getType() const {
 	return type;
 }
 
-NodeScanner *BinaryTree::getDataCollector() {
+// Get the connected NodeScanner
+NodeScanner *BinaryTree::getDataSource() const {
 	return source;
 }
 
+// Allocate a NodeScanner
 void BinaryTree::setSource(NodeScanner * source) {
 	this->source = source;
 }
 
-const BinaryTree::State&BinaryTree::getState() const {
+// Get the last test result of this branch
+const BinaryTree::State& BinaryTree::getState() const {
 	return state;
 }
 
+// Get the xml index the data represents. This is counted by the data redirect 
+// system
 id_type BinaryTree::getIndex() const {
 	return index;
 }
 
+// Set the index
 void BinaryTree::setIndex(const id_type &i) {
 	index = i;
 }
 
+// Set the xpath syntax type this branch represents
 void BinaryTree::setType(const XPathSyntaxType &t) {
 	type = t;
 }
 
-void BinaryTree::deactivateFilledBranches() {
-    if (source && getNode()) source->removeListener(this);
-    if (left) left->deactivateFilledBranches();
-    if (right) right->deactivateFilledBranches();
+// Stop the branches with allocated data from recieving new data
+void BinaryTree::stopDataContainingBranchesFromRecievingData() {
+    if (getDataSource() && getData()) getDataSource()->removeListener(this);
+    if (left) left->stopDataContainingBranchesFromRecievingData();
+    if (right) right->stopDataContainingBranchesFromRecievingData();
 }
 
-void BinaryTree::deactivateAll() {
-	if (source) source->removeListener(this);
-	if (left) left->deactivateAll();
-	if (right) right->deactivateAll();
+// Stop all branches from recieving new data
+void BinaryTree::stopSubBranchesFromRecievingData() {
+	if(getDataSource()) {
+		if(getDataSource()->getConnectionType() == NodeScanner::EDGE_ROOT) return;
+		else getDataSource()->removeListener(this);
+	}
+	if (left) left->stopSubBranchesFromRecievingData();
+	if (right) right->stopSubBranchesFromRecievingData();
 }
 
+// Check wether the branch has a comparison as parent before any node parent 
+// branches
 bool BinaryTree::hasComparisonBeforeNodeParent() const {
     for (const BinaryTree * p = getParent(); p; p = p->getParent()) {
         switch(p->getType()) {
@@ -441,25 +513,35 @@ bool BinaryTree::hasComparisonBeforeNodeParent() const {
     return false;
 }
 
+// Print a visual representation of the BinaryTree with it's allocated data
 void BinaryTree::printStructure() const {
 	const int WIDTH = 30;
 
 	if (!hasParent()) {
 		std::cout << ".";
 		for (int i = -2; i != WIDTH; ++i) std::cout << "-";
-//		std::cout << "." << std::endl;
 		std::cout << std::endl;
 	}
 
-	std::stringstream sformat;
-//	sformat << "| %-" << WIDTH << "s |";
-	sformat << "| %s";
-	std::string sdata(getDepth() * 3, ' ');
-	if (getNode() != nullptr) sdata += Directory::getName() + ":" + getNode()->getName() + " " + (getNode()->getType() != ELEMENT ? getNode()->getValue() : "");
-	else sdata += getName();
-	std::printf(sformat.str().c_str(), sdata.c_str());
-    if (getType() == NODE && getNode()) std::printf(" %4u %4i", getIndex(), getNode()->getID());
-    std::printf("\n");
+	std::stringstream scanner, data;
+	std::string depth(getDepth() * 3, ' ');
+	data << Directory::getName();
+
+	if(getData()) {
+		data << ":" << getData()->getName() << "(" << getData()->getID() << ")";
+		if(getData()->getType() != ELEMENT) {
+			data << "=" << getData()->getValue();
+		}
+	}
+	
+	if(getDataSource()) {
+		scanner << getDataSource()->getID();
+	}
+
+	std::printf("| %10s %s%s\n", 
+		scanner.str().data(), 
+		depth.c_str(), 
+		data.str().data());
 
 	if (left) left->printStructure();
 	if (right) right->printStructure();
@@ -467,23 +549,25 @@ void BinaryTree::printStructure() const {
 	if (!hasParent()) {
 		std::cout << "'";
 		for (int i = -2; i != WIDTH; ++i) std::cout << "-";
-//		std::cout << std::endl;
 		const std::vector<const char*> translation = {"TRUE", "FALSE", "NA"};
 		std::cout << " " << translation.at(state) << std::endl;
 	}
 }
 
-void BinaryTree::removeNode() {
-	Node * node = getNode();
-	if (node) node->removeListener(this);
-//	std::printf("DELETE %s BRANCH NODE\n", Directory::getName().data());
-	SharedNodeContainer::removeNode();
-	if (node && node->getLink() == 0) {
-		delete node;
-	}
+// Get allocated data
+Node * BinaryTree::getData() const {
+	return data;
 }
 
-
+// Remove allocated data
+void BinaryTree::removeData() {
+	if(data) {
+		data->removeListener(this);
+		data->notifyUnlink();
+		if(data->getLink() == 0) delete data;
+		data = 0;
+	}
+}
 
 
 

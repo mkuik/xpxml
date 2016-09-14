@@ -9,17 +9,16 @@
 #include <sys/timeb.h>
 #include <ctime>
 
-XMLParser::XMLParser(std::ostream &out) : output(out) {
-    
+XMLParser::XMLParser(std::ostream &out) : output(out), parser(new SaxParser()) {
 }
 
 XMLParser::~XMLParser() {
-
+	delete parser;
+	if (factory) delete factory;
 }
 
 int XMLParser::parse(const char *file, const char *xpath, const Method &method) {
     starttime = getMilliCount();
-	parser = new SaxParser();
 	
 	switch(method) {
         case TO_XML:
@@ -30,20 +29,10 @@ int XMLParser::parse(const char *file, const char *xpath, const Method &method) 
             break;
     }
 
-    parser->addListener(this);
-    factory->addListener(this);
     factory->setAdapter(parser);
-
-    int i = 1;
-    i = parser->parse(file);
-
-    doStatusReport();
-    std::printf("\n");
-
-	delete parser;
-    delete factory;
-
-    return i;
+	parser->addListener(this);
+    factory->addListener(this);
+    return parser->parse(file);
 }
 
 void XMLParser::stop() {
@@ -55,7 +44,6 @@ void XMLParser::setNodeIDLimit(const id_type &id) {
 }
 
 void XMLParser::onEndOfElement(Node *node) {
-//    std::cout << "end of element " << node->toString() << " \n";
     if (maxID != 0 && maxID <= node->getID())
         stop();
 }
@@ -75,8 +63,12 @@ time_t XMLParser::getMilliCount() const {
 }
 
 void XMLParser::onNewNode(Node *node) {
-//    std::cout << "new node " << node->toString() << " \n";
     if (node->getID() % 1000 == 0) doStatusReport();
+}
+
+void XMLParser::onEndOfFile() {
+	doStatusReport();
+	std::printf("\n");
 }
 
 void XMLParser::doStatusReport() {
@@ -97,8 +89,9 @@ void XMLParser::doStatusReport() {
         time << seconds << "s";
 //        time << ms % 1000 << "";
 
-        std::printf("Parsing... %i%%  ETA:%s  %.1fmbps  %li matches  \r", ((int) (progress * 100 + 0.5)),
-                    time.str().data(), mbps, hits);
+        std::printf("Parsing... %i%%  ETA:%s  %.1fmbps  %s  %li matches  \r", 
+			((int) (progress * 100 + 0.5)), time.str().data(), mbps, 
+			factory->toString().data(), hits);
     }
 }
 

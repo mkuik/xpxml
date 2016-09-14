@@ -17,7 +17,8 @@ class XMLFactory : public Factory,
 		public SaxParserListener,
         public FactoryListener,
 		public SecureTrashBin<FactoryNode> {
-	FactoryNode *factory, *factoryRoot;
+	FactoryNode * dir;
+	FactoryNode * const root;
 	const bool DEBUG = true;
 	id_type nNew = 0, nDelete = 0;
 public:
@@ -33,13 +34,15 @@ private:
 	void onNewElement(Node *) override;
 	void onEndOfElement(Node *) override;
 	void onNewAttribute(Node *) override;
+	void onEndOfFile() override;
 	void onFactoryNodeClosedInParser(void * source, id_type id) override;
 	void onFactoryNodeClosedInOutput(void * source, id_type id) override;
 	void onFactoryNodeSourceDeleted(void * source, id_type id) override;
 	void onFactoryNodeDeleted(void * source, id_type id) override;
 	void stateChanged(FactoryNode*);
     void removeFromTrash(FactoryNode*) override;
-	double getEfficiency() const override;
+	double getEfficiency() const override; 
+	virtual std::string toString() const;
 };
 
 #endif /* XPATHTOXML_H_ */

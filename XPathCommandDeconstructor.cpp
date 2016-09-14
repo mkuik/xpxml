@@ -4,21 +4,25 @@
 
 #include <iostream>
 #include "XPathCommandDeconstructor.h"
+#include "convert.h"
 
-XPathCommandDeconstructor::XPathCommandDeconstructor(param_t begin, param_t end) {
+XPathCommandDeconstructor::XPathCommandDeconstructor(const Xpath& xpath) {
 
-	param_t logicalOperator = findLogicalOperator(begin, end);
-	if(logicalOperator != end) {
-		leftBegin = begin;
+	param_t leftBegin, leftEnd, rightBegin, rightEnd; 
+	bool leftLocated = false, rightLocated = false;
+
+	param_t logicalOperator = findLogicalOperator(xpath.begin(), xpath.end());
+	if(logicalOperator != xpath.end()) {
+		leftBegin = xpath.begin();
 		leftEnd = logicalOperator;
 		rightBegin = logicalOperator + 1;
-		rightEnd = end;
-		rightStringRangefound = leftStringRangefound = true;
+		rightEnd = xpath.end();
+		rightLocated = leftLocated = true;
 	}
 	else {
-		param_t comparisonOperator = findComparisonOperator(begin, end);
-		if(comparisonOperator != end) {
-			leftBegin = begin;
+		param_t comparisonOperator = findComparisonOperator(xpath.begin(), xpath.end());
+		if(comparisonOperator != xpath.end()) {
+			leftBegin = xpath.begin();
 			leftEnd = comparisonOperator;
 			switch(type) {
 			case GREATER_OR_EQUAL:
@@ -30,35 +34,36 @@ XPathCommandDeconstructor::XPathCommandDeconstructor(param_t begin, param_t end)
 				rightBegin = comparisonOperator + 1;
 				break;
 			}
-			rightEnd = end;
-			rightStringRangefound = leftStringRangefound = true;
-		} else {
-        }
+			rightEnd = xpath.end();
+			rightLocated = leftLocated = true;
+		}
+		else {
+		}
 	}
 
 	// Find the seperator that ends the current scope
-	param_t scope_end = findEndOfScopeSeparator(begin, end);
+	param_t scope_end = findEndOfScopeSeparator(xpath.begin(), xpath.end());
 
 	// Handle brackets and function calls
-	if(!hasRight()) {
-		for(param_t it = begin; it != scope_end; ++it) {
+	if(!rightLocated) {
+		for(param_t it = xpath.begin(); it != scope_end; ++it) {
 			if(it->compare("[") == 0) {
 				// Predicate located
 				rightBegin = it;
-				rightEnd = find(rightBegin, end, "[", "]");
-				rightStringRangefound = true;
+				rightEnd = find(rightBegin, xpath.end(), "[", "]");
+				rightLocated = true;
 				it = rightEnd;
 				rightBegin++;
 				break;
 			}
 			else if(it->compare("(") == 0) {
-				if(it != begin && (it - 1)->compare("not") == 0) {
+				if(it != xpath.begin() && (it - 1)->compare("not") == 0) {
 					type = NOT;
 					name = "NOT";
 				}
 				leftBegin = it;
-				leftEnd = find(leftBegin, end, "(", ")");
-				leftStringRangefound = true;
+				leftEnd = find(leftBegin, xpath.end(), "(", ")");
+				leftLocated = true;
 				it = leftEnd;
 				leftBegin++;
 			}
@@ -66,31 +71,21 @@ XPathCommandDeconstructor::XPathCommandDeconstructor(param_t begin, param_t end)
 	}
 
 	// Get the current depth name
-	if(type == NODE) extractName(begin, end);
+	if(type == NODE) extractName(xpath.begin(), xpath.end());
 
 	// Allocate the remaining scopes to left
-	if(!leftStringRangefound && scope_end != end) {
+	if(!leftLocated && scope_end != xpath.end()) {
 		leftBegin = scope_end;
-		leftEnd = end;
-		leftStringRangefound = true;
+		leftEnd = xpath.end();
+		leftLocated = true;
 	}
 
-	rightStringRangefound = rightStringRangefound && rightBegin != rightEnd;
-	leftStringRangefound = leftStringRangefound && leftBegin != leftEnd;
+	
+	if(rightLocated) right = Xpath(rightBegin, rightEnd);
+	if(leftLocated) left = Xpath(leftBegin, leftEnd);
+}
 
-//	std::printf("%s %i\n", name.data(), type);
-//	if (hasLeft()) {
-//		std::printf(" 0  ");
-//		for (param_t it = leftBegin; it != leftEnd; ++it)
-//			std::printf("%s", it->data());
-//		std::printf("\n");
-//	}
-//	if (hasRight()) {
-//		std::printf(" 1  ");
-//		for (param_t it = rightBegin; it != rightEnd; ++it)
-//			std::printf("%s", it->data());
-//		std::printf("\n");
-//	}
+XPathCommandDeconstructor::~XPathCommandDeconstructor() {
 }
 
 const std::string&XPathCommandDeconstructor::getName() const {
@@ -109,31 +104,23 @@ const NodeType&XPathCommandDeconstructor::getNodeType() const {
 	return nodetype;
 }
 
-const param_t&XPathCommandDeconstructor::getLeftBegin() const {
-	return leftBegin;
+Xpath XPathCommandDeconstructor::getLeft() const {
+	return left;
 }
 
-const param_t&XPathCommandDeconstructor::getLeftEnd() const {
-	return leftEnd;
+Xpath XPathCommandDeconstructor::getRight() const {
+	return right;
 }
 
-const param_t&XPathCommandDeconstructor::getRightBegin() const {
-	return rightBegin;
+bool XPathCommandDeconstructor::hasLeft() const {
+	return !left.empty();
 }
 
-const param_t&XPathCommandDeconstructor::getRightEnd() const {
-	return rightEnd;
+bool XPathCommandDeconstructor::hasRight() const {
+	return !right.empty();
 }
 
-const bool&XPathCommandDeconstructor::hasLeft() const {
-	return leftStringRangefound;
-}
-
-const bool&XPathCommandDeconstructor::hasRight() const {
-	return rightStringRangefound;
-}
-
-param_t XPathCommandDeconstructor::findEndOfScopeSeparator(const param_t& begin, param_t end) const {
+param_t XPathCommandDeconstructor::findEndOfScopeSeparator(const param_t& begin, const param_t& end) const {
 	// Find the seperator that ends the current scope
 	
 	param_t it = begin;
@@ -157,23 +144,23 @@ param_t XPathCommandDeconstructor::findEndOfScopeSeparator(const param_t& begin,
 		else if(scope == 0) {
 			mode = open;
 			if(it->compare("/") == 0) {
-				end = it;
-				break;
+				return it;
 			}
 		}
 	}
 	return end;
 }
 
-param_t XPathCommandDeconstructor::find(param_t begin, param_t end, std::string left, std::string right) {
-	for(short scope = 0; begin != end; ++begin) {
-		if(begin->compare(right) == 0) {
+param_t XPathCommandDeconstructor::find(const param_t& begin, const param_t& end, std::string left, std::string right) {
+	short scope = 0;
+	for(param_t it = begin; begin != end; ++it) {
+		if(it->compare(right) == 0) {
 			--scope;
 			if(scope < 1) {
-				return begin;
+				return it;
 			}
 		}
-		else if(begin->compare(left) == 0) {
+		else if(it->compare(left) == 0) {
 			++scope;
 		}
 	}
